@@ -20,7 +20,7 @@ info() {
 
 log "Loading OBA aliases..."
 # Load OBA development aliases
-source /workspaces/ot-bicme/.devcontainer/workspace-setup/oba-aliases.sh
+source .devcontainer/workspace-setup/oba-aliases.sh
 
 log "Starting virtual display..."
 

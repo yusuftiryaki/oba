@@ -109,7 +109,7 @@ venv.bak/
 dmypy.json
 
 # Project specific
-logs/*.log
+logs/
 data/
 temp/
 *.tmp

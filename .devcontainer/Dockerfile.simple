@@ -45,7 +45,7 @@ RUN useradd -m -s /bin/bash vscode && \
 USER vscode
 
 # Set working directory
-WORKDIR /workspace
+WORKDIR /workspaces/ot-bicme
 
 # Default command
 CMD ["bash"]

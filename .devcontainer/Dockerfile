@@ -116,10 +116,10 @@ USER vscode
 ENV DISPLAY=:99
 
 # Python path
-ENV PYTHONPATH=/workspace
+ENV PYTHONPATH=/workspaces/ot-bicme
 
 # Workspace directory
-WORKDIR /workspace
+WORKDIR /workspaces/ot-bicme
 
 # Default command
 CMD ["bash"]

@@ -30,7 +30,7 @@ info() {
 }
 
 # Change to workspace directory
-cd /workspace
+cd /workspaces/ot-bicme
 
 log "Installing Python dependencies..."
 
@@ -50,8 +50,26 @@ fi
 
 # Simulation requirements (eğer varsa)
 if [ -f "requirements-simulation.txt" ]; then
-    pip3 install -r requirements-simulation.txt
-    log "Simulation requirements installed"
+    log "Installing simulation requirements (with error handling)..."
+    # Try to install, but don't fail the entire setup if some packages fail
+    pip3 install -r requirements-simulation.txt || {
+        warn "Some simulation packages failed to install"
+        log "Attempting to install packages individually..."
+
+        # Install packages line by line, skipping problematic ones
+        while IFS= read -r line; do
+            # Skip empty lines and comments
+            if [[ ! "$line" =~ ^[[:space:]]*$ ]] && [[ ! "$line" =~ ^[[:space:]]*# ]]; then
+                # Extract package name (before any comparison operators)
+                package=$(echo "$line" | sed 's/[>=<].*//' | tr -d ' ')
+                if [[ -n "$package" ]]; then
+                    echo "Installing: $package"
+                    pip3 install "$line" || warn "Failed to install: $package (skipping)"
+                fi
+            fi
+        done < requirements-simulation.txt
+    }
+    log "Simulation requirements installation completed (some packages may have been skipped)"
 fi
 
 log "Setting up GPIO mocking..."
