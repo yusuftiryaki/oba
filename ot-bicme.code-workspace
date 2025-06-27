@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.py": "python",
+			"*.json": "jsonc",
+			"*.yaml": "yaml",
+			"*.yml": "yaml"
+		},
+		"terminal.integrated.defaultProfile.linux": "bash",
+		"git.confirmSync": false,
+		"extensions.ignoreRecommendations": false,
+		"github.copilot.enable": {
+			"*": true,
+			"yaml": true,
+			"plaintext": false,
+			"markdown": true
+		}
+	}
+}

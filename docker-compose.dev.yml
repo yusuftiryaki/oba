@@ -1,0 +1,62 @@
+# Docker Compose for OBA Robot Development
+# Opsiyonel servisler için (Redis, Database vb.)
+
+version: '3.8'
+
+services:
+  # Redis (caching ve message queue için)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # PostgreSQL (gelecekte veri saklamak için)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: oba_robot
+      POSTGRES_USER: oba_user
+      POSTGRES_PASSWORD: oba_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Grafana (monitoring ve dashboard için)
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+  # MQTT Broker (sensor data streaming için)
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+  grafana_data:
+  mosquitto_data:
+  mosquitto_logs:
+
+networks:
+  default:
+    name: oba_robot_network

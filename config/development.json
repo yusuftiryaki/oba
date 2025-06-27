@@ -1,0 +1,81 @@
+{
+  "environment": "development",
+  "debug": true,
+  "simulation_mode": true,
+  "gpio_mock": true,
+  "camera_mock": true,
+
+  "robot": {
+    "name": "OBA Robot (Dev)",
+    "version": "1.0.0-dev",
+    "hardware_revision": "Simulated"
+  },
+
+  "web": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": true,
+    "auto_reload": true,
+    "cors_enabled": true
+  },
+
+  "logging": {
+    "level": "DEBUG",
+    "file": "logs/development.log",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "max_file_size": "10MB",
+    "backup_count": 5
+  },
+
+  "simulation": {
+    "enable_physics": true,
+    "enable_visualization": true,
+    "real_time_factor": 1.0,
+    "time_step": 0.01,
+    "world_size": [50.0, 30.0]
+  },
+
+  "mock_hardware": {
+    "gpio_pins": {
+      "motor_left_pwm": 18,
+      "motor_left_dir": 19,
+      "motor_right_pwm": 20,
+      "motor_right_dir": 21,
+      "blade_motor": 22,
+      "led_status": 23
+    },
+    "i2c_devices": {
+      "power_monitor": "0x40",
+      "imu": "0x28",
+      "adc": "0x48"
+    },
+    "camera": {
+      "width": 640,
+      "height": 480,
+      "fps": 30,
+      "format": "BGR"
+    }
+  },
+
+  "battery": {
+    "simulate_discharge": true,
+    "initial_level": 85,
+    "discharge_rate": 0.1
+  },
+
+  "sensors": {
+    "add_noise": true,
+    "noise_levels": {
+      "gps": 0.1,
+      "imu": 0.01,
+      "encoder": 0.005
+    }
+  },
+
+  "development": {
+    "auto_format_on_save": true,
+    "run_tests_on_change": false,
+    "enable_profiling": false,
+    "mock_external_services": true
+  }
+}

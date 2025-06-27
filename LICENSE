@@ -1,0 +1,84 @@
+MIT License
+
+Copyright (c) 2025 OBA Robot Project Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Third-Party Libraries and Dependencies:
+
+This project uses the following third-party libraries, each with their own licenses:
+
+1. Flask (BSD-3-Clause License)
+   Copyright 2010 Pallets
+
+2. OpenCV (Apache License 2.0)
+   Copyright 2000-2023 Intel Corporation, Willow Garage Inc., Itseez Inc.
+
+3. NumPy (BSD License)
+   Copyright 2005-2023 NumPy Developers
+
+4. Raspberry Pi GPIO Libraries (Various Licenses)
+   Please check individual library licenses
+
+5. Bootstrap (MIT License)
+   Copyright 2011-2023 The Bootstrap Authors
+
+6. jQuery (MIT License)
+   Copyright JS Foundation and other contributors
+
+For detailed license information of each dependency, please refer to the
+respective library documentation or the requirements.txt file.
+
+---
+
+Hardware Design Notice:
+
+The hardware design documents, CAD files, and mechanical drawings included
+in this project are released under Creative Commons Attribution-ShareAlike 4.0
+International License (CC BY-SA 4.0).
+
+You are free to:
+- Share — copy and redistribute the material in any medium or format
+- Adapt — remix, transform, and build upon the material for any purpose
+
+Under the following terms:
+- Attribution — You must give appropriate credit
+- ShareAlike — If you remix, transform, or build upon the material, you must
+  distribute your contributions under the same license as the original
+
+---
+
+Disclaimer:
+
+This software is designed for autonomous lawn mowing robots. Users are responsible
+for ensuring safe operation and compliance with local regulations. The authors
+and contributors assume no liability for any damages, injuries, or legal issues
+arising from the use of this software.
+
+Safety considerations:
+- Always test in controlled environments first
+- Ensure proper safety barriers and emergency stops
+- Follow local laws regarding autonomous vehicles
+- Regular maintenance and inspection required
+- Not suitable for areas with people or animals present during operation
+
+For questions about licensing or usage, please contact the project maintainers
+through the project's GitHub repository.

@@ -1,0 +1,60 @@
+# Simulation Dependencies
+# Robot simülasyonu için gerekli paketler
+
+# Physics Engine
+pymunk>=6.4.0           # 2D physics simulation
+
+# Graphics and Visualization
+pygame>=2.1.0           # Real-time visualization
+matplotlib>=3.6.0       # Plotting and data visualization
+plotly>=5.11.0          # Interactive plots
+seaborn>=0.12.0         # Statistical visualization
+
+# Computer Vision for Simulation
+opencv-python>=4.6.0    # Computer vision
+Pillow>=9.3.0           # Image processing
+
+# Scientific Computing
+numpy>=1.21.0           # Numerical computing (zaten ana requirements'ta var ama simulation için kritik)
+scipy>=1.9.0            # Scientific computing
+
+# 3D Visualization (Opsiyonel)
+panda3d>=1.10.11        # 3D graphics engine
+moderngl>=5.7.0         # Modern OpenGL wrapper
+
+# Sensor Simulation
+noise>=1.2.2            # Realistic noise generation
+filterpy>=1.4.5         # Kalman filters and sensor fusion
+
+# Environment Modeling
+shapely>=1.8.0          # Geometric operations
+geopandas>=0.12.0       # Geographic data
+rasterio>=1.3.0         # Raster data processing
+
+# Robot Kinematics
+robotics-toolbox-python>=1.0.2  # Robot kinematics and dynamics
+
+# Jupyter Notebooks for Analysis
+jupyter>=1.0.0
+ipywidgets>=8.0.0
+
+# Animation and Video Export
+imageio>=2.22.0         # Image I/O
+imageio-ffmpeg>=0.4.7   # Video encoding
+gifpy>=1.3              # GIF creation
+
+# Performance Profiling
+memory-profiler>=0.61.0
+line-profiler>=4.0.1
+
+# Configuration
+pyyaml>=6.0             # YAML configuration files
+toml>=0.10.2            # TOML configuration
+
+# Parallel Processing
+joblib>=1.2.0           # Parallel computing
+multiprocessing-logging>=0.3.4  # Logging in multiprocessing
+
+# Real-time Communication
+zmq>=24.0.0             # ZeroMQ messaging
+redis>=4.4.0            # In-memory data structure store

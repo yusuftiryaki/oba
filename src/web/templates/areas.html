@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}Alan Yönetimi - OBA Robot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .area-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f9f9f9;
+    }
+    .area-map {
+        width: 100%;
+        height: 300px;
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        position: relative;
+        cursor: crosshair;
+    }
+    .area-point {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #007bff;
+        border-radius: 50%;
+        cursor: pointer;
+        transform: translate(-50%, -50%);
+    }
+    .area-polygon {
+        position: absolute;
+        border: 2px solid #007bff;
+        background: rgba(0, 123, 255, 0.1);
+        pointer-events: none;
+    }
+    .btn-group {
+        margin-bottom: 10px;
+    }
+    .area-stats {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>🏞️ Çalışma Alanları</h2>
+            
+            <!-- Alan Listesi -->
+            <div id="area-list">
+                <div class="area-card" data-area-id="alan1">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>🌱 Doğu Bahçe</h5>
+                            <p class="text-muted">30m x 20m alan (600 m²)</p>
+                            <div class="area-stats">
+                                <small>
+                                    <strong>Son Biçim:</strong> 25 Haziran 2025<br>
+                                    <strong>Toplam Biçim:</strong> 12 kez<br>
+                                    <strong>Tahmini Süre:</strong> 45 dakika
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <div class="btn-group-vertical">
+                                <button class="btn btn-success btn-sm" onclick="startMowing('alan1')">
+                                    ✂️ Biç
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="editArea('alan1')">
+                                    ✏️ Düzenle
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="showArea('alan1')">
+                                    👁️ Göster
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteArea('alan1')">
+                                    🗑️ Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="area-card" data-area-id="alan2">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>🍎 Batı Meyve Bahçesi</h5>
+                            <p class="text-muted">25m x 15m alan (375 m²)</p>
+                            <div class="area-stats">
+                                <small>
+                                    <strong>Son Biçim:</strong> 23 Haziran 2025<br>
+                                    <strong>Toplam Biçim:</strong> 8 kez<br>
+                                    <strong>Tahmini Süre:</strong> 30 dakika
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <div class="btn-group-vertical">
+                                <button class="btn btn-success btn-sm" onclick="startMowing('alan2')">
+                                    ✂️ Biç
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="editArea('alan2')">
+                                    ✏️ Düzenle
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="showArea('alan2')">
+                                    👁️ Göster
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteArea('alan2')">
+                                    🗑️ Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Yeni Alan Ekleme -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>➕ Yeni Alan Ekle</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary" onclick="startAreaCreation()">
+                        🗺️ Harita Üzerinde Çiz
+                    </button>
+                    <button class="btn btn-secondary ml-2" onclick="importFromGPS()">
+                        📍 GPS Koordinatlarından İçe Aktar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Harita/Planlama Paneli -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>🗺️ Alan Haritası</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary active" onclick="setMapMode('view')">
+                            👁️ Görüntüle
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="setMapMode('edit')">
+                            ✏️ Düzenle
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="setMapMode('create')">
+                            ➕ Oluştur
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="area-map" id="area-map">
+                        <!-- Dinamik olarak oluşturulacak alan gösterimi -->
+                        <div class="area-polygon" style="left: 20px; top: 20px; width: 120px; height: 80px;" title="Doğu Bahçe"></div>
+                        <div class="area-polygon" style="left: 160px; top: 120px; width: 100px; height: 60px;" title="Batı Meyve Bahçesi"></div>
+                        
+                        <!-- Robot pozisyonu -->
+                        <div class="area-point" style="left: 50%; top: 50%; background: #dc3545;" title="Robot Pozisyonu"></div>
+                        
+                        <!-- Şarj istasyonu -->
+                        <div class="area-point" style="left: 10%; top: 10%; background: #28a745;" title="Şarj İstasyonu"></div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Açıklama:</strong><br>
+                            🟦 Mavi: Tanımlı alanlar<br>
+                            🔴 Kırmızı: Robot pozisyonu<br>
+                            🟢 Yeşil: Şarj istasyonu<br>
+                            Haritaya tıklayarak yeni alan oluşturabilirsiniz.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alan İstatistikleri -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>📊 Alan İstatistikleri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">2</h4>
+                            <small>Tanımlı Alan</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">975 m²</h4>
+                            <small>Toplam Alan</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-info">75 dk</h4>
+                            <small>Toplam Süre</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning">20</h4>
+                            <small>Toplam Biçim</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alan Düzenleme Modal -->
+<div class="modal fade" id="editAreaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Alan Düzenle</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editAreaForm">
+                    <div class="form-group">
+                        <label>Alan Adı:</label>
+                        <input type="text" class="form-control" id="areaName" placeholder="Örn: Doğu Bahçe">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Biçme Ayarları:</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="small">Biçme Yüksekliği:</label>
+                                <select class="form-control" id="cuttingHeight">
+                                    <option value="1">Seviye 1 (En Düşük)</option>
+                                    <option value="2">Seviye 2</option>
+                                    <option value="3" selected>Seviye 3 (Orta)</option>
+                                    <option value="4">Seviye 4</option>
+                                    <option value="5">Seviye 5 (En Yüksek)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small">Hız:</label>
+                                <select class="form-control" id="mowingSpeed">
+                                    <option value="0.2">Yavaş (0.2 m/s)</option>
+                                    <option value="0.4" selected>Normal (0.4 m/s)</option>
+                                    <option value="0.6">Hızlı (0.6 m/s)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Biçme Düzeni:</label>
+                        <select class="form-control" id="mowingPattern">
+                            <option value="boustrophedon" selected>Biçerdöver (Paralel)</option>
+                            <option value="spiral">Spiral</option>
+                            <option value="random">Rastgele</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Koordinatlar:</label>
+                        <textarea class="form-control" id="areaCoordinates" rows="4" 
+                                  placeholder="(0,0), (30,0), (30,20), (0,20)"></textarea>
+                        <small class="text-muted">Her satıra bir koordinat çifti (x,y) yazın</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="enableSchedule">
+                            <label class="custom-control-label" for="enableSchedule">
+                                Otomatik Zamanlama
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="scheduleOptions" style="display: none;">
+                        <label>Zamanlama:</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select class="form-control" id="scheduleFrequency">
+                                    <option value="daily">Günlük</option>
+                                    <option value="weekly" selected>Haftalık</option>
+                                    <option value="monthly">Aylık</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="time" class="form-control" id="scheduleTime" value="09:00">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    ❌ İptal
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveArea()">
+                    ✅ Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentMapMode = 'view';
+let selectedArea = null;
+let newAreaPoints = [];
+
+// Harita modu değiştirme
+function setMapMode(mode) {
+    currentMapMode = mode;
+    $('.btn-group .btn').removeClass('active');
+    $(`button[onclick="setMapMode('${mode}')"]`).addClass('active');
+    
+    const map = document.getElementById('area-map');
+    
+    switch(mode) {
+        case 'view':
+            map.style.cursor = 'default';
+            break;
+        case 'edit':
+            map.style.cursor = 'grab';
+            break;
+        case 'create':
+            map.style.cursor = 'crosshair';
+            newAreaPoints = [];
+            break;
+    }
+}
+
+// Alan biçme başlatma
+function startMowing(areaId) {
+    if (confirm(`${areaId} alanında biçme işlemini başlatmak istiyor musunuz?`)) {
+        showNotification('🚀 Biçme işlemi başlatıldı!', 'success');
+        
+        // WebSocket ile robot komutunu gönder
+        if (socket) {
+            socket.emit('start_mowing', {
+                area_id: areaId,
+                cutting_height: 3,
+                speed: 0.4
+            });
+        }
+    }
+}
+
+// Alan düzenleme
+function editArea(areaId) {
+    selectedArea = areaId;
+    
+    // Alan bilgilerini yükle (gerçek uygulamada API'den gelir)
+    const areaData = {
+        'alan1': {
+            name: 'Doğu Bahçe',
+            cutting_height: 3,
+            speed: 0.4,
+            pattern: 'boustrophedon',
+            coordinates: '(0,0), (30,0), (30,20), (0,20)'
+        },
+        'alan2': {
+            name: 'Batı Meyve Bahçesi',
+            cutting_height: 2,
+            speed: 0.3,
+            pattern: 'spiral',
+            coordinates: '(5,5), (30,5), (30,20), (5,20)'
+        }
+    };
+    
+    const data = areaData[areaId];
+    if (data) {
+        $('#areaName').val(data.name);
+        $('#cuttingHeight').val(data.cutting_height);
+        $('#mowingSpeed').val(data.speed);
+        $('#mowingPattern').val(data.pattern);
+        $('#areaCoordinates').val(data.coordinates);
+        
+        $('#editAreaModal').modal('show');
+    }
+}
+
+// Alan gösterme/gizleme
+function showArea(areaId) {
+    const areaCard = $(`.area-card[data-area-id="${areaId}"]`);
+    areaCard.toggleClass('border-primary');
+    
+    // Haritada vurgula
+    // Implementation burada olabilir
+}
+
+// Alan silme
+function deleteArea(areaId) {
+    if (confirm('Bu alanı silmek istediğinizden emin misiniz?')) {
+        $(`.area-card[data-area-id="${areaId}"]`).fadeOut(() => {
+            $(this).remove();
+        });
+        showNotification('🗑️ Alan silindi', 'warning');
+    }
+}
+
+// Alan kaydetme
+function saveArea() {
+    const areaData = {
+        name: $('#areaName').val(),
+        cutting_height: parseInt($('#cuttingHeight').val()),
+        speed: parseFloat($('#mowingSpeed').val()),
+        pattern: $('#mowingPattern').val(),
+        coordinates: $('#areaCoordinates').val(),
+        schedule_enabled: $('#enableSchedule').is(':checked'),
+        schedule_frequency: $('#scheduleFrequency').val(),
+        schedule_time: $('#scheduleTime').val()
+    };
+    
+    // API'ye gönder
+    if (socket) {
+        socket.emit('save_area', {
+            area_id: selectedArea,
+            data: areaData
+        });
+    }
+    
+    $('#editAreaModal').modal('hide');
+    showNotification('✅ Alan ayarları kaydedildi', 'success');
+}
+
+// Yeni alan oluşturma başlatma
+function startAreaCreation() {
+    setMapMode('create');
+    showNotification('🗺️ Harita üzerinde alan sınırlarını çizin', 'info');
+}
+
+// GPS içe aktarma
+function importFromGPS() {
+    // GPS koordinat içe aktarma modalı
+    alert('GPS koordinat içe aktarma özelliği yakında eklenecek!');
+}
+
+// Zamanlama seçeneklerini göster/gizle
+$('#enableSchedule').change(function() {
+    if ($(this).is(':checked')) {
+        $('#scheduleOptions').slideDown();
+    } else {
+        $('#scheduleOptions').slideUp();
+    }
+});
+
+// Harita tıklama olayları
+$('#area-map').click(function(e) {
+    if (currentMapMode === 'create') {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Koordinat sistemi dönüşümü (pixel -> metre)
+        const realX = (x / rect.width) * 50; // 50m maksimum genişlik
+        const realY = (y / rect.height) * 30; // 30m maksimum yükseklik
+        
+        newAreaPoints.push({x: realX, y: realY, pixelX: x, pixelY: y});
+        
+        // Noktayı görsel olarak ekle
+        const point = $('<div class="area-point"></div>');
+        point.css({
+            left: x + 'px',
+            top: y + 'px',
+            background: '#ffc107'
+        });
+        $(this).append(point);
+        
+        if (newAreaPoints.length >= 3) {
+            // Alan oluşturma tamamlanabilir
+            const confirmCreate = confirm(`${newAreaPoints.length} nokta ile alan oluşturulsun mu?`);
+            if (confirmCreate) {
+                createNewArea();
+            }
+        }
+    }
+});
+
+// Yeni alan oluşturma
+function createNewArea() {
+    const areaName = prompt('Alan adı:', 'Yeni Alan');
+    if (areaName) {
+        // Koordinatları string formatına çevir
+        const coordString = newAreaPoints.map(p => 
+            `(${p.realX.toFixed(1)},${p.realY.toFixed(1)})`
+        ).join(', ');
+        
+        // Yeni alan kartını ekle
+        const newAreaCard = $(`
+            <div class="area-card" data-area-id="new-area-${Date.now()}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>🆕 ${areaName}</h5>
+                        <p class="text-muted">Yeni tanımlanmış alan</p>
+                        <div class="area-stats">
+                            <small>
+                                <strong>Koordinatlar:</strong> ${coordString}<br>
+                                <strong>Durum:</strong> Henüz biçilmedi
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        <div class="btn-group-vertical">
+                            <button class="btn btn-success btn-sm">✂️ Biç</button>
+                            <button class="btn btn-primary btn-sm">✏️ Düzenle</button>
+                            <button class="btn btn-warning btn-sm">👁️ Göster</button>
+                            <button class="btn btn-danger btn-sm">🗑️ Sil</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('#area-list').append(newAreaCard);
+        
+        // Haritada kalıcı alan olarak göster
+        drawAreaOnMap(newAreaPoints);
+        
+        // Temizle
+        newAreaPoints = [];
+        $('.area-point[style*="background: rgb(255, 193, 7)"]').remove();
+        setMapMode('view');
+        
+        showNotification('✅ Yeni alan oluşturuldu!', 'success');
+    }
+}
+
+// Haritada alan çizme
+function drawAreaOnMap(points) {
+    if (points.length < 3) return;
+    
+    // Minimum ve maksimum koordinatları bul
+    const minX = Math.min(...points.map(p => p.pixelX));
+    const minY = Math.min(...points.map(p => p.pixelY));
+    const maxX = Math.max(...points.map(p => p.pixelX));
+    const maxY = Math.max(...points.map(p => p.pixelY));
+    
+    const polygon = $('<div class="area-polygon"></div>');
+    polygon.css({
+        left: minX + 'px',
+        top: minY + 'px',
+        width: (maxX - minX) + 'px',
+        height: (maxY - minY) + 'px',
+        border: '2px solid #28a745',
+        background: 'rgba(40, 167, 69, 0.1)'
+    });
+    
+    $('#area-map').append(polygon);
+}
+
+// Bildirim gösterme
+function showNotification(message, type = 'info') {
+    const alertClass = `alert-${type}`;
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" 
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    // 5 saniye sonra otomatik kapat
+    setTimeout(() => {
+        notification.alert('close');
+    }, 5000);
+}
+
+// Sayfa yüklendiğinde
+$(document).ready(function() {
+    console.log('Alan yönetimi sayfası yüklendi');
+});
+</script>
+{% endblock %}

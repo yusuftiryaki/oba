@@ -1,0 +1,111 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Robot Application",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "development",
+                "GPIO_MOCK": "1",
+                "CAMERA_MOCK": "1"
+            },
+            "args": [],
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "preLaunchTask": "Clean Cache"
+        },
+        {
+            "name": "Debug Web Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.web.web_server",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "development",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "test"
+            },
+            "args": [
+                "tests/",
+                "-v",
+                "--tb=short"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Simulation",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "simulation.run_simulation",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "simulation",
+                "DISPLAY": ":99"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Navigation",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/navigation_test.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "development"
+            },
+            "args": [],
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Hardware",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/hardware_test.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "ROBOT_ENV": "development",
+                "GPIO_MOCK": "1"
+            },
+            "args": [],
+            "justMyCode": false
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Robot + Web",
+            "configurations": [
+                "Debug Robot Application",
+                "Debug Web Server"
+            ],
+            "stopAll": true
+        }
+    ]
+}

@@ -1,0 +1,51 @@
+# Simple OBA Robot Development Container
+FROM python:3.11-bullseye
+
+# Container bilgileri
+LABEL maintainer="OBA Robot Development Team"
+LABEL description="Simple development environment for OBA Robot"
+
+# System packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    nano \
+    vim \
+    tree \
+    htop \
+    libopencv-dev \
+    python3-opencv \
+    i2c-tools \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python packages
+RUN pip install --upgrade pip setuptools wheel
+
+# Development tools
+RUN pip install \
+    black \
+    pylint \
+    flake8 \
+    pytest \
+    jupyter \
+    flask \
+    numpy \
+    opencv-python \
+    fake-rpi \
+    gpiozero
+
+# Create user
+RUN useradd -m -s /bin/bash vscode && \
+    usermod -aG sudo vscode && \
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to user
+USER vscode
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+CMD ["bash"]

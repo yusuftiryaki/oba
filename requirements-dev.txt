@@ -1,0 +1,81 @@
+# Development ve Testing Dependencies
+# Ana requirements.txt'e ek olarak yüklenir
+
+# Code Quality Tools
+black>=22.0.0
+pylint>=2.15.0
+flake8>=5.0.0
+isort>=5.10.0
+mypy>=0.991
+bandit>=1.7.4
+safety>=2.3.0
+
+# Testing Framework
+pytest>=7.2.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-asyncio>=0.20.0
+coverage>=7.0.0
+
+# Development Tools
+ipython>=8.7.0
+jupyter>=1.0.0
+jupyterlab>=3.5.0
+notebook>=6.5.0
+ipywidgets>=8.0.0
+
+# Debugging
+pdbpp>=0.10.3
+ipdb>=0.13.9
+
+# Simulation Dependencies
+pygame>=2.1.0
+pymunk>=6.4.0
+matplotlib>=3.6.0
+plotly>=5.11.0
+seaborn>=0.12.0
+
+# Mock Libraries (Hardware simülasyonu için)
+fake-rpi>=0.7.1
+mock>=4.0.3
+
+# Web Development
+flask-cors>=3.0.10
+flask-restful>=0.3.9
+gunicorn>=20.1.0
+redis>=4.4.0
+
+# Documentation
+sphinx>=5.3.0
+sphinx-rtd-theme>=1.1.1
+mkdocs>=1.4.0
+mkdocs-material>=8.5.0
+
+# Performance Monitoring
+memory-profiler>=0.61.0
+line-profiler>=4.0.1
+py-spy>=0.3.14
+
+# Utilities
+python-dotenv>=0.21.0
+click>=8.1.0
+tqdm>=4.64.0
+rich>=12.6.0
+
+# Computer Vision Development
+imutils>=0.5.4
+scikit-image>=0.19.0
+# dlib>=19.24.0  # CMake gerektiriyor - development için devre dışı
+
+# Data Analysis
+pandas>=1.5.0
+seaborn>=0.12.0
+scikit-learn>=1.1.0
+
+# API Testing
+requests>=2.28.0
+httpx>=0.23.0
+
+# Configuration Management
+pydantic>=1.10.0
+python-decouple>=3.6

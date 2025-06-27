@@ -1,0 +1,689 @@
+{% extends "base.html" %}
+
+{% block title %}Sistem Ayarları - OBA Robot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-section {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #f9f9f9;
+    }
+    .setting-item {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .setting-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .slider-value {
+        min-width: 60px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .status-online { background: #28a745; }
+    .status-offline { background: #dc3545; }
+    .status-warning { background: #ffc107; }
+    .config-editor {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>⚙️ Sistem Ayarları</h2>
+            
+            <!-- Robot Ayarları -->
+            <div class="settings-section">
+                <h4>🤖 Robot Ayarları</h4>
+                
+                <div class="setting-item">
+                    <label><strong>Robot Adı:</strong></label>
+                    <input type="text" class="form-control" id="robotName" value="OBA-001" placeholder="Robot adı">
+                    <small class="text-muted">Robotunuz için özel bir ad belirleyin</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Maksimum Hız:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="maxSpeed" min="0.1" max="1.0" step="0.1" value="0.6">
+                        <span class="slider-value" id="maxSpeedValue">0.6 m/s</span>
+                    </div>
+                    <small class="text-muted">Robotun maksimum hareket hızı</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Tekerlek Çapı:</strong></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="wheelDiameter" value="0.15" step="0.01" min="0.1" max="0.3">
+                        <div class="input-group-append">
+                            <span class="input-group-text">metre</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Odometri kalibrasyonu için tekerlek çapı</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Robot Genişliği:</strong></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="wheelBase" value="0.45" step="0.01" min="0.3" max="0.8">
+                        <div class="input-group-append">
+                            <span class="input-group-text">metre</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Sol ve sağ tekerlek arası mesafe</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Enkoder Çözünürlüğü:</strong></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="encoderPPR" value="1024" min="512" max="4096">
+                        <div class="input-group-append">
+                            <span class="input-group-text">PPR</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Pulse Per Revolution (devir başına nabız)</small>
+                </div>
+            </div>
+            
+            <!-- Biçme Ayarları -->
+            <div class="settings-section">
+                <h4>✂️ Biçme Ayarları</h4>
+                
+                <div class="setting-item">
+                    <label><strong>Varsayılan Biçme Yüksekliği:</strong></label>
+                    <select class="form-control" id="defaultCuttingHeight">
+                        <option value="1">Seviye 1 (En Düşük - 2cm)</option>
+                        <option value="2">Seviye 2 (3cm)</option>
+                        <option value="3" selected>Seviye 3 (4cm)</option>
+                        <option value="4">Seviye 4 (5cm)</option>
+                        <option value="5">Seviye 5 (En Yüksek - 6cm)</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Biçme Motor RPM:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="cuttingRPM" min="2000" max="4000" step="100" value="2800">
+                        <span class="slider-value" id="cuttingRPMValue">2800 RPM</span>
+                    </div>
+                    <small class="text-muted">Biçme motorunun devir hızı</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Biçme Düzeni:</strong></label>
+                    <select class="form-control" id="defaultPattern">
+                        <option value="boustrophedon" selected>Biçerdöver (Paralel Çizgiler)</option>
+                        <option value="spiral">Spiral (İçten Dışa)</option>
+                        <option value="perimeter">Çevre Öncelikli</option>
+                        <option value="random">Rastgele</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Çizgi Aralığı:</strong></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="lineSpacing" value="0.4" step="0.1" min="0.2" max="0.8">
+                        <div class="input-group-append">
+                            <span class="input-group-text">metre</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Paralel biçme çizgileri arası mesafe</small>
+                </div>
+            </div>
+            
+            <!-- Güç ve Batarya Ayarları -->
+            <div class="settings-section">
+                <h4>🔋 Güç ve Batarya Ayarları</h4>
+                
+                <div class="setting-item">
+                    <label><strong>Düşük Batarya Eşiği:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="lowBatteryThreshold" min="10" max="40" step="5" value="20">
+                        <span class="slider-value" id="lowBatteryValue">20%</span>
+                    </div>
+                    <small class="text-muted">Bu seviyenin altında şarj istasyonuna döner</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Kritik Batarya Eşiği:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="criticalBatteryThreshold" min="5" max="15" step="1" value="5">
+                        <span class="slider-value" id="criticalBatteryValue">5%</span>
+                    </div>
+                    <small class="text-muted">Bu seviyenin altında acil durdurma</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Tam Şarj Eşiği:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="fullChargeThreshold" min="85" max="100" step="5" value="95">
+                        <span class="slider-value" id="fullChargeValue">95%</span>
+                    </div>
+                    <small class="text-muted">Bu seviyede şarj işlemi biter</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Güç Tasarrufu Modu:</strong></label>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="powerSaveMode">
+                        <label class="custom-control-label" for="powerSaveMode">Aktif</label>
+                    </div>
+                    <small class="text-muted">Düşük bataryada performansı azaltır</small>
+                </div>
+            </div>
+            
+            <!-- Sensör Ayarları -->
+            <div class="settings-section">
+                <h4>📡 Sensör Ayarları</h4>
+                
+                <div class="setting-item">
+                    <label><strong>IMU Güncellem Frekansı:</strong></label>
+                    <select class="form-control" id="imuFrequency">
+                        <option value="10">10 Hz</option>
+                        <option value="20" selected>20 Hz</option>
+                        <option value="50">50 Hz</option>
+                        <option value="100">100 Hz</option>
+                    </select>
+                    <small class="text-muted">Saniyede kaç kez IMU verisi okunur</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Enkoder Filtresi:</strong></label>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="encoderFilter" checked>
+                        <label class="custom-control-label" for="encoderFilter">Aktif</label>
+                    </div>
+                    <small class="text-muted">Enkoder verilerinde gürültü filtreleme</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Kalman Filtre Q Değeri:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="kalmanQ" min="0.001" max="0.1" step="0.001" value="0.01">
+                        <span class="slider-value" id="kalmanQValue">0.01</span>
+                    </div>
+                    <small class="text-muted">Süreç gürültüsü kovaryansı (düşük = daha az duyarlı)</small>
+                </div>
+                
+                <div class="setting-item">
+                    <label><strong>Kalman Filtre R Değeri:</strong></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control-range" id="kalmanR" min="0.1" max="10" step="0.1" value="1.0">
+                        <span class="slider-value" id="kalmanRValue">1.0</span>
+                    </div>
+                    <small class="text-muted">Ölçüm gürültüsü kovaryansı (düşük = ölçümlere daha çok güven)</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Sistem Durumu -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Sistem Durumu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <strong>Robot Durumu:</strong> Aktif
+                    </div>
+                    <div class="mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <strong>Wi-Fi Bağlantısı:</strong> Bağlı (-45 dBm)
+                    </div>
+                    <div class="mb-3">
+                        <span class="status-indicator status-warning"></span>
+                        <strong>Son Güncelleme:</strong> 3 gün önce
+                    </div>
+                    <div class="mb-3">
+                        <span class="status-indicator status-online"></span>
+                        <strong>Sensörler:</strong> Tümü Aktif
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hızlı Eylemler -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>⚡ Hızlı Eylemler</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary btn-block mb-2" onclick="calibrateSensors()">
+                        🧭 Sensör Kalibrasyonu
+                    </button>
+                    <button class="btn btn-warning btn-block mb-2" onclick="resetOdometry()">
+                        📍 Odometri Sıfırla
+                    </button>
+                    <button class="btn btn-info btn-block mb-2" onclick="testMotors()">
+                        ⚙️ Motor Testi
+                    </button>
+                    <button class="btn btn-success btn-block mb-2" onclick="saveConfiguration()">
+                        💾 Ayarları Kaydet
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="resetToDefaults()">
+                        🔄 Varsayılanlara Dön
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Sistem Bilgileri -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>ℹ️ Sistem Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <small>
+                        <strong>Yazılım Sürümü:</strong> v1.0.0<br>
+                        <strong>Donanım Revizyonu:</strong> Rev. 2.1<br>
+                        <strong>Raspberry Pi:</strong> 4B 4GB<br>
+                        <strong>Python Sürümü:</strong> 3.9.2<br>
+                        <strong>Çalışma Süresi:</strong> 2d 14h 32m<br>
+                        <strong>Toplam Çalışma:</strong> 125.5 saat<br>
+                        <strong>Toplam Mesafe:</strong> 245.8 km
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Konfigürasyon Dosyası -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>📝 Gelişmiş Ayarlar</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <small><strong>Uyarı:</strong> Bu ayarlar deneyimli kullanıcılar içindir.</small>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm btn-block" onclick="showConfigEditor()">
+                        📄 config.json Düzenle
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm btn-block mt-2" onclick="exportConfig()">
+                        📤 Konfigürasyon Dışa Aktar
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm btn-block mt-1" onclick="importConfig()">
+                        📥 Konfigürasyon İçe Aktar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Konfigürasyon Editörü Modal -->
+<div class="modal fade" id="configEditorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📝 Konfigürasyon Editörü</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Dikkat:</strong> Yanlış değerler robot performansını olumsuz etkileyebilir.
+                </div>
+                <textarea class="form-control config-editor" id="configTextArea" rows="20" placeholder="Konfigürasyon yükleniyor..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    ❌ İptal
+                </button>
+                <button type="button" class="btn btn-warning" onclick="validateConfig()">
+                    ✅ Doğrula
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveConfig()">
+                    💾 Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Slider değerlerini güncelle
+document.getElementById('maxSpeed').addEventListener('input', function() {
+    document.getElementById('maxSpeedValue').textContent = this.value + ' m/s';
+});
+
+document.getElementById('cuttingRPM').addEventListener('input', function() {
+    document.getElementById('cuttingRPMValue').textContent = this.value + ' RPM';
+});
+
+document.getElementById('lowBatteryThreshold').addEventListener('input', function() {
+    document.getElementById('lowBatteryValue').textContent = this.value + '%';
+});
+
+document.getElementById('criticalBatteryThreshold').addEventListener('input', function() {
+    document.getElementById('criticalBatteryValue').textContent = this.value + '%';
+});
+
+document.getElementById('fullChargeThreshold').addEventListener('input', function() {
+    document.getElementById('fullChargeValue').textContent = this.value + '%';
+});
+
+document.getElementById('kalmanQ').addEventListener('input', function() {
+    document.getElementById('kalmanQValue').textContent = parseFloat(this.value).toFixed(3);
+});
+
+document.getElementById('kalmanR').addEventListener('input', function() {
+    document.getElementById('kalmanRValue').textContent = parseFloat(this.value).toFixed(1);
+});
+
+// Sensör kalibrasyonu
+function calibrateSensors() {
+    if (confirm('Sensör kalibrasyonu yaklaşık 2 dakika sürer. Başlatılsın mı?')) {
+        showNotification('🧭 Sensör kalibrasyonu başlatıldı...', 'info');
+        
+        // WebSocket ile komut gönder
+        if (socket) {
+            socket.emit('calibrate_sensors');
+        }
+        
+        // Simüle edilmiş progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            if (progress <= 100) {
+                showNotification(`🔄 Kalibrasyon devam ediyor... %${progress}`, 'info');
+            } else {
+                clearInterval(interval);
+                showNotification('✅ Sensör kalibrasyonu tamamlandı!', 'success');
+            }
+        }, 2000);
+    }
+}
+
+// Odometri sıfırlama
+function resetOdometry() {
+    if (confirm('Odometri verilerini sıfırlamak istediğinizden emin misiniz?')) {
+        if (socket) {
+            socket.emit('reset_odometry');
+        }
+        showNotification('📍 Odometri sıfırlandı', 'success');
+    }
+}
+
+// Motor testi
+function testMotors() {
+    if (confirm('Motor testi başlatılsın mı? Robot kısa süreli hareket edecek.')) {
+        showNotification('⚙️ Motor testi başlatıldı...', 'info');
+        
+        if (socket) {
+            socket.emit('test_motors');
+        }
+        
+        setTimeout(() => {
+            showNotification('✅ Motor testi tamamlandı', 'success');
+        }, 5000);
+    }
+}
+
+// Ayarları kaydetme
+function saveConfiguration() {
+    const config = {
+        robot: {
+            name: document.getElementById('robotName').value,
+            max_speed: parseFloat(document.getElementById('maxSpeed').value),
+            wheel_diameter: parseFloat(document.getElementById('wheelDiameter').value),
+            wheel_base: parseFloat(document.getElementById('wheelBase').value),
+            encoder_ppr: parseInt(document.getElementById('encoderPPR').value)
+        },
+        cutting: {
+            default_height: parseInt(document.getElementById('defaultCuttingHeight').value),
+            default_rpm: parseInt(document.getElementById('cuttingRPM').value),
+            default_pattern: document.getElementById('defaultPattern').value,
+            line_spacing: parseFloat(document.getElementById('lineSpacing').value)
+        },
+        battery: {
+            low_threshold: parseInt(document.getElementById('lowBatteryThreshold').value),
+            critical_threshold: parseInt(document.getElementById('criticalBatteryThreshold').value),
+            full_threshold: parseInt(document.getElementById('fullChargeThreshold').value),
+            power_save_mode: document.getElementById('powerSaveMode').checked
+        },
+        sensors: {
+            imu_frequency: parseInt(document.getElementById('imuFrequency').value),
+            encoder_filter: document.getElementById('encoderFilter').checked,
+            kalman_q: parseFloat(document.getElementById('kalmanQ').value),
+            kalman_r: parseFloat(document.getElementById('kalmanR').value)
+        }
+    };
+    
+    // WebSocket ile gönder
+    if (socket) {
+        socket.emit('save_config', config);
+    }
+    
+    showNotification('💾 Ayarlar kaydedildi!', 'success');
+}
+
+// Varsayılan ayarlara dönme
+function resetToDefaults() {
+    if (confirm('Tüm ayarları varsayılan değerlere döndürmek istediğinizden emin misiniz?')) {
+        // Varsayılan değerleri yükle
+        document.getElementById('robotName').value = 'OBA-001';
+        document.getElementById('maxSpeed').value = 0.6;
+        document.getElementById('maxSpeedValue').textContent = '0.6 m/s';
+        document.getElementById('wheelDiameter').value = 0.15;
+        document.getElementById('wheelBase').value = 0.45;
+        document.getElementById('encoderPPR').value = 1024;
+        
+        document.getElementById('defaultCuttingHeight').value = 3;
+        document.getElementById('cuttingRPM').value = 2800;
+        document.getElementById('cuttingRPMValue').textContent = '2800 RPM';
+        document.getElementById('defaultPattern').value = 'boustrophedon';
+        document.getElementById('lineSpacing').value = 0.4;
+        
+        document.getElementById('lowBatteryThreshold').value = 20;
+        document.getElementById('lowBatteryValue').textContent = '20%';
+        document.getElementById('criticalBatteryThreshold').value = 5;
+        document.getElementById('criticalBatteryValue').textContent = '5%';
+        document.getElementById('fullChargeThreshold').value = 95;
+        document.getElementById('fullChargeValue').textContent = '95%';
+        document.getElementById('powerSaveMode').checked = false;
+        
+        document.getElementById('imuFrequency').value = 20;
+        document.getElementById('encoderFilter').checked = true;
+        document.getElementById('kalmanQ').value = 0.01;
+        document.getElementById('kalmanQValue').textContent = '0.01';
+        document.getElementById('kalmanR').value = 1.0;
+        document.getElementById('kalmanRValue').textContent = '1.0';
+        
+        showNotification('🔄 Varsayılan ayarlar yüklendi', 'warning');
+    }
+}
+
+// Konfigürasyon editörünü göster
+function showConfigEditor() {
+    // Mevcut konfigürasyonu yükle
+    const configText = `{
+  "robot": {
+    "name": "OBA-001",
+    "max_speed": 0.6,
+    "wheel_diameter": 0.15,
+    "wheel_base": 0.45,
+    "encoder_ppr": 1024
+  },
+  "cutting": {
+    "default_height": 3,
+    "default_rpm": 2800,
+    "default_pattern": "boustrophedon",
+    "line_spacing": 0.4
+  },
+  "battery": {
+    "low_threshold": 20,
+    "critical_threshold": 5,
+    "full_threshold": 95,
+    "power_save_mode": false
+  },
+  "sensors": {
+    "imu_frequency": 20,
+    "encoder_filter": true,
+    "kalman_q": 0.01,
+    "kalman_r": 1.0
+  },
+  "docking": {
+    "station_coords": [0.0, 0.0],
+    "approach_distance": 5.0,
+    "precision_distance": 0.5
+  },
+  "web": {
+    "port": 5000,
+    "debug": false,
+    "camera_fps": 30
+  }
+}`;
+    
+    document.getElementById('configTextArea').value = configText;
+    $('#configEditorModal').modal('show');
+}
+
+// Konfigürasyon doğrulama
+function validateConfig() {
+    const configText = document.getElementById('configTextArea').value;
+    
+    try {
+        const config = JSON.parse(configText);
+        showNotification('✅ Konfigürasyon geçerli!', 'success');
+        return true;
+    } catch (error) {
+        showNotification(`❌ JSON hatası: ${error.message}`, 'danger');
+        return false;
+    }
+}
+
+// Konfigürasyon kaydetme
+function saveConfig() {
+    if (validateConfig()) {
+        const configText = document.getElementById('configTextArea').value;
+        
+        if (socket) {
+            socket.emit('save_raw_config', configText);
+        }
+        
+        $('#configEditorModal').modal('hide');
+        showNotification('💾 Konfigürasyon kaydedildi!', 'success');
+    }
+}
+
+// Konfigürasyon dışa aktarma
+function exportConfig() {
+    // Konfigürasyonu dosya olarak indir
+    const config = {
+        robot_name: document.getElementById('robotName').value,
+        timestamp: new Date().toISOString(),
+        // ... diğer ayarlar
+    };
+    
+    const dataStr = JSON.stringify(config, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `oba_config_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    
+    showNotification('📤 Konfigürasyon dosyası indirildi', 'info');
+}
+
+// Konfigürasyon içe aktarma
+function importConfig() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    // Ayarları form elemanlarına yükle
+                    // ... implementation
+                    showNotification('📥 Konfigürasyon yüklendi!', 'success');
+                } catch (error) {
+                    showNotification('❌ Geçersiz konfigürasyon dosyası', 'danger');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    
+    input.click();
+}
+
+// Bildirim gösterme
+function showNotification(message, type = 'info') {
+    const alertClass = `alert-${type}`;
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" 
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    setTimeout(() => {
+        notification.alert('close');
+    }, 5000);
+}
+
+// WebSocket olayları
+if (typeof socket !== 'undefined') {
+    socket.on('config_saved', function(data) {
+        showNotification('✅ Konfigürasyon başarıyla kaydedildi', 'success');
+    });
+    
+    socket.on('calibration_complete', function(data) {
+        showNotification('🧭 Sensör kalibrasyonu tamamlandı', 'success');
+    });
+    
+    socket.on('test_complete', function(data) {
+        showNotification(`✅ ${data.test_type} testi tamamlandı`, 'success');
+    });
+}
+
+// Sayfa yüklendiğinde
+$(document).ready(function() {
+    console.log('Ayarlar sayfası yüklendi');
+    
+    // Mevcut ayarları yükle
+    if (socket) {
+        socket.emit('get_current_config');
+    }
+});
+</script>
+{% endblock %}

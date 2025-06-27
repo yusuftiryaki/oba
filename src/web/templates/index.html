@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Ana Dashboard -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card robot-status-card">
+            <div class="card-header">
+                <h5><i class="fas fa-robot"></i> Robot Durumu</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Durum:</strong> <span id="robot-state" class="badge bg-primary">Hazır</span></p>
+                <p><strong>Konum:</strong><br><span id="robot-position">X: 0.00, Y: 0.00</span></p>
+                <p><strong>Çalışma Süresi:</strong> <span id="uptime">--</span></p>
+                <p><strong>Son Güncelleme:</strong> <span id="last-update">--</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card power-card">
+            <div class="card-header">
+                <h5><i class="fas fa-battery-half"></i> Güç Durumu</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Batarya:</strong> <span id="battery-level">--</span></p>
+                <div class="progress mb-3">
+                    <div id="battery-bar" class="progress-bar bg-success" style="width: 0%"></div>
+                </div>
+                <p><strong>Voltaj:</strong> <span id="battery-voltage">--</span></p>
+                <p><strong>Akım:</strong> <span id="battery-current">--</span></p>
+                <p><strong>Şarj Durumu:</strong> <span id="charging-status">--</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card nav-card">
+            <div class="card-header">
+                <h5><i class="fas fa-map"></i> Navigasyon</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Aktif Alan:</strong> <span id="current-area">--</span></p>
+                <p><strong>İlerleme:</strong> <span id="progress">--</span></p>
+                <div class="progress mb-3">
+                    <div id="progress-bar" class="progress-bar bg-info" style="width: 0%"></div>
+                </div>
+                <p><strong>Kalan Süre:</strong> <span id="remaining-time">--</span></p>
+                <p><strong>Biçilen Alan:</strong> <span id="mowed-area">-- m²</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acil Kontroller -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Acil Kontroller</h5>
+            </div>
+            <div class="card-body text-center">
+                <button class="btn btn-danger btn-lg me-3" onclick="emergencyStop()">
+                    <i class="fas fa-stop"></i> ACİL DURDUR
+                </button>
+                <button class="btn btn-warning btn-lg me-3" onclick="clearEmergency()">
+                    <i class="fas fa-play"></i> Devam Et
+                </button>
+                <button class="btn btn-info btn-lg me-3" onclick="goToControl()">
+                    <i class="fas fa-gamepad"></i> Manuel Kontrol
+                </button>
+                <button class="btn btn-success btn-lg" onclick="returnToCharger()">
+                    <i class="fas fa-charging-station"></i> Şarja Dön
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kamera Görüntüsü -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-video"></i> Kamera Görüntüsü</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="camera-container" style="min-height: 300px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <img id="camera-feed" src="/video_feed" alt="Kamera Görüntüsü" class="img-fluid" style="max-height: 400px; display: none;">
+                    <div id="camera-placeholder">
+                        <i class="fas fa-camera fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Kamera kapalı</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary me-2" onclick="toggleCamera()">
+                        <i class="fas fa-camera"></i> <span id="camera-btn-text">Kamerayı Aç</span>
+                    </button>
+                    <button class="btn btn-secondary me-2" onclick="captureImage()">
+                        <i class="fas fa-camera-retro"></i> Fotoğraf Çek
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i> Tam Ekran
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list"></i> Hızlı Görevler</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="startMowing()">
+                        <i class="fas fa-play"></i> Biçmeye Başla
+                    </button>
+                    <button class="btn btn-warning" onclick="pauseMowing()">
+                        <i class="fas fa-pause"></i> Biçmeyi Duraklat
+                    </button>
+                    <button class="btn btn-info" onclick="testBlade()">
+                        <i class="fas fa-cog"></i> Bıçak Testi
+                    </button>
+                    <button class="btn btn-secondary" onclick="calibrateRobot()">
+                        <i class="fas fa-compass"></i> Kalibrasyon
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <h6>Sistem Bilgileri</h6>
+                <small>
+                    <p><strong>Sıcaklık:</strong> <span id="system-temp">--°C</span></p>
+                    <p><strong>CPU:</strong> <span id="cpu-usage">--%</span></p>
+                    <p><strong>Bellek:</strong> <span id="memory-usage">--%</span></p>
+                    <p><strong>Bağlı Kullanıcı:</strong> <span id="connected-users">--</span></p>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log/Mesaj Alanı -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-terminal"></i> Sistem Mesajları</h5>
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> Temizle
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="log-container" style="height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;">
+                    <div class="log-entry">[INFO] Robot sistem başlatıldı</div>
+                    <div class="log-entry">[INFO] Tüm modüller yüklendi</div>
+                    <div class="log-entry">[INFO] Web arayüzü aktif</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let cameraEnabled = false;
+    let updateInterval;
+    
+    // Sayfa yüklendiğinde
+    document.addEventListener('DOMContentLoaded', function() {
+        startPeriodicUpdates();
+        updateLastUpdateTime();
+        
+        // Socket event listeners
+        socket.on('robot_status_update', function(data) {
+            updateRobotStatus(data);
+        });
+        
+        socket.on('log_message', function(data) {
+            addLogEntry(data.level, data.message);
+        });
+    });
+    
+    function startPeriodicUpdates() {
+        updateInterval = setInterval(function() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateRobotStatus(data.robot);
+                    updateLastUpdateTime();
+                })
+                .catch(error => {
+                    console.error('Status update error:', error);
+                    addLogEntry('ERROR', 'Durum güncellemesi başarısız');
+                });
+        }, 2000); // 2 saniyede bir güncelle
+    }
+    
+    function updateRobotStatus(status) {
+        if (!status) return;
+        
+        // Ana kontrolcü durumu
+        if (status.main_controller) {
+            const mc = status.main_controller;
+            
+            document.getElementById('robot-state').textContent = mc.state || '--';
+            
+            if (mc.position) {
+                document.getElementById('robot-position').textContent = 
+                    `X: ${mc.position.x.toFixed(2)}, Y: ${mc.position.y.toFixed(2)}`;
+            }
+            
+            if (mc.uptime) {
+                document.getElementById('uptime').textContent = formatTime(mc.uptime);
+            }
+        }
+        
+        // Güç durumu
+        if (status.power) {
+            const power = status.power;
+            
+            document.getElementById('battery-level').textContent = `${power.battery_level.toFixed(1)}%`;
+            document.getElementById('battery-voltage').textContent = `${power.voltage.toFixed(1)}V`;
+            document.getElementById('battery-current').textContent = `${power.current.toFixed(1)}A`;
+            document.getElementById('charging-status').textContent = power.is_charging ? 'Şarj oluyor' : 'Şarj olmuyor';
+            
+            // Progress bar güncelle
+            const batteryBar = document.getElementById('battery-bar');
+            batteryBar.style.width = `${power.battery_level}%`;
+            
+            // Renk ayarla
+            if (power.battery_level > 50) {
+                batteryBar.className = 'progress-bar bg-success';
+            } else if (power.battery_level > 20) {
+                batteryBar.className = 'progress-bar bg-warning';
+            } else {
+                batteryBar.className = 'progress-bar bg-danger';
+            }
+        }
+        
+        // Navigasyon durumu
+        if (status.navigation) {
+            const nav = status.navigation;
+            
+            document.getElementById('current-area').textContent = nav.current_area || '--';
+            document.getElementById('progress').textContent = `${nav.progress.toFixed(1)}%`;
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${nav.progress}%`;
+        }
+    }
+    
+    function updateLastUpdateTime() {
+        const now = new Date();
+        document.getElementById('last-update').textContent = now.toLocaleTimeString();
+    }
+    
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function toggleCamera() {
+        cameraEnabled = !cameraEnabled;
+        
+        const cameraFeed = document.getElementById('camera-feed');
+        const placeholder = document.getElementById('camera-placeholder');
+        const btnText = document.getElementById('camera-btn-text');
+        
+        if (cameraEnabled) {
+            cameraFeed.style.display = 'block';
+            placeholder.style.display = 'none';
+            btnText.textContent = 'Kamerayı Kapat';
+            socket.emit('start_camera');
+            addLogEntry('INFO', 'Kamera akışı başlatıldı');
+        } else {
+            cameraFeed.style.display = 'none';
+            placeholder.style.display = 'block';
+            btnText.textContent = 'Kamerayı Aç';
+            socket.emit('stop_camera');
+            addLogEntry('INFO', 'Kamera akışı durduruldu');
+        }
+    }
+    
+    function captureImage() {
+        addLogEntry('INFO', 'Fotoğraf çekildi');
+        showAlert('Fotoğraf çekildi ve kaydedildi', 'success');
+    }
+    
+    function toggleFullscreen() {
+        const cameraFeed = document.getElementById('camera-feed');
+        if (cameraFeed.requestFullscreen) {
+            cameraFeed.requestFullscreen();
+        }
+    }
+    
+    function goToControl() {
+        window.location.href = '/control';
+    }
+    
+    function returnToCharger() {
+        if (confirm('Robot şarj istasyonuna dönecek. Onaylıyor musunuz?')) {
+            fetch('/api/return_to_charge', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Robot şarj istasyonuna dönüyor', 'info');
+                        addLogEntry('INFO', 'Şarj istasyonuna dönüş komutu verildi');
+                    }
+                });
+        }
+    }
+    
+    function startMowing() {
+        // Alan seçimi için modal açılabilir
+        fetch('/api/areas')
+            .then(response => response.json())
+            .then(areas => {
+                const areaNames = Object.keys(areas);
+                if (areaNames.length > 0) {
+                    const selectedArea = areaNames[0]; // İlk alanı seç
+                    fetch(`/api/areas/${selectedArea}/start`, {method: 'POST'})
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showAlert('Biçme görevi başlatıldı', 'success');
+                                addLogEntry('INFO', `Biçme görevi başlatıldı: ${selectedArea}`);
+                            }
+                        });
+                } else {
+                    showAlert('Tanımlanmış alan bulunamadı', 'warning');
+                }
+            });
+    }
+    
+    function pauseMowing() {
+        fetch('/api/pause_mowing', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Biçme görevi duraklatıldı', 'warning');
+                    addLogEntry('INFO', 'Biçme görevi duraklatıldı');
+                }
+            });
+    }
+    
+    function testBlade() {
+        fetch('/api/blade/start', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Bıçak testi başlatıldı', 'info');
+                    addLogEntry('INFO', 'Bıçak test modu aktif');
+                    
+                    // 5 saniye sonra durdur
+                    setTimeout(() => {
+                        fetch('/api/blade/stop', {method: 'POST'});
+                        addLogEntry('INFO', 'Bıçak test modu tamamlandı');
+                    }, 5000);
+                }
+            });
+    }
+    
+    function calibrateRobot() {
+        if (confirm('Robot kalibrasyonu başlatılacak. Bu işlem birkaç dakika sürebilir.')) {
+            fetch('/api/calibrate', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Kalibrasyon başlatıldı', 'info');
+                        addLogEntry('INFO', 'Robot kalibrasyon süreci başlatıldı');
+                    }
+                });
+        }
+    }
+    
+    function addLogEntry(level, message) {
+        const logContainer = document.getElementById('log-container');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        let levelClass = '';
+        switch(level) {
+            case 'ERROR': levelClass = 'text-danger'; break;
+            case 'WARNING': levelClass = 'text-warning'; break;
+            case 'INFO': levelClass = 'text-info'; break;
+            default: levelClass = 'text-muted';
+        }
+        
+        logEntry.innerHTML = `<span class="text-muted">[${timestamp}]</span> <span class="${levelClass}">[${level}]</span> ${message}`;
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+        
+        // Maksimum 100 log tutmak için
+        if (logContainer.children.length > 100) {
+            logContainer.removeChild(logContainer.firstChild);
+        }
+    }
+    
+    function clearLogs() {
+        document.getElementById('log-container').innerHTML = '';
+        addLogEntry('INFO', 'Log geçmişi temizlendi');
+    }
+    
+    // Sayfa kapatıldığında interval'i temizle
+    window.addEventListener('beforeunload', function() {
+        if (updateInterval) {
+            clearInterval(updateInterval);
+        }
+    });
+</script>
+{% endblock %}
