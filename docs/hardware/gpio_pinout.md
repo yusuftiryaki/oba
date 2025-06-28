@@ -11,17 +11,26 @@
 | GPIO 4 | 7 | Genel IO | Yedek | - |
 | GPIO 6 | 31 | PWM | Biçme Motor PWM | Hardware PWM |
 | GPIO 7 | 26 | Genel IO | Biçme Motor Dir | Yön kontrolü |
+| GPIO 8 | 24 | SPI CE0 | LiDAR SPI | SPI interface |
+| GPIO 9 | 21 | SPI MISO | LiDAR SPI | SPI interface |
+| GPIO 10 | 19 | SPI MOSI | LiDAR SPI | SPI interface |
+| GPIO 11 | 23 | SPI CLK | LiDAR SPI | SPI interface |
 | GPIO 12 | 32 | PWM | Sol Palet PWM | Hardware PWM |
-| GPIO 13 | 33 | PWM | Sol Palet PWM | Hardware PWM |
+| GPIO 13 | 33 | PWM | Sol Palet DIR | Hardware PWM |
+| GPIO 14 | 8 | UART TX | Debug UART | Serial debug |
+| GPIO 15 | 10 | UART RX | Debug UART | Serial debug |
 | GPIO 16 | 36 | PWM | Sağ Palet PWM | Hardware PWM |
+| GPIO 17 | 11 | Genel IO | Kamera Enable | Kamera kontrol |
 | GPIO 18 | 12 | PWM | Sol Enkoder A | Interrupt capable |
 | GPIO 19 | 35 | PWM | Sol Enkoder B | Interrupt capable |
 | GPIO 20 | 38 | Genel IO | Sağ Enkoder A | Interrupt capable |
 | GPIO 21 | 40 | Genel IO | Sağ Enkoder B | Interrupt capable |
-| GPIO 23 | 16 | Genel IO | IR Sensör 1 | Dijital giriş |
-| GPIO 24 | 18 | Genel IO | IR Sensör 2 | Dijital giriş |
+| GPIO 22 | 15 | Genel IO | IR LED Enable | IR aydınlatma |
+| GPIO 23 | 16 | Genel IO | IR Sensör Sol | Dijital giriş |
+| GPIO 24 | 18 | Genel IO | IR Sensör Sağ | Dijital giriş |
 | GPIO 25 | 22 | Genel IO | Lineer Aktüatör | PWM/Dijital |
-| GPIO 26 | 37 | PWM | Sağ Palet PWM | Hardware PWM |
+| GPIO 26 | 37 | PWM | Sağ Palet DIR | Hardware PWM |
+| GPIO 27 | 13 | Genel IO | Emergency Stop | Acil durdurma |
 
 ### 🔋 Güç Pinleri
 
@@ -30,6 +39,32 @@
 | Pin 2, 4 | 5V | 3A toplam | Sensörler, Pi beslemesi |
 | Pin 1, 17 | 3.3V | 50mA | Düşük güç sensörleri |
 | Pin 6, 9, 14, 20, 25, 30, 34, 39 | GND | - | Ortak toprak |
+
+### 🆕 YENİ SENSÖR BAĞLANTILARI
+
+#### LiDAR Sensör (RPLiDAR A1M8)
+```
+LiDAR ─────┬─── VCC ──── 5V (Pin 2)
+           ├─── GND ──── GND (Pin 6)
+           ├─── MOSI ─── GPIO 10 (Pin 19) - SPI MOSI
+           ├─── MISO ─── GPIO 9 (Pin 21)  - SPI MISO
+           ├─── CLK ──── GPIO 11 (Pin 23) - SPI CLK
+           └─── CS ───── GPIO 8 (Pin 24)  - SPI CE0
+```
+
+#### Pi Kamera v2.1
+```
+Pi Kamera ─┬─── CSI Connector (Ribbon cable)
+           ├─── Enable ── GPIO 17 (Pin 11)
+           └─── LED ───── Dahili (kamera üzerinde)
+```
+
+#### Acil Durdurma Butonu
+```
+E-Stop ────┬─── NO ────── GPIO 27 (Pin 13)
+           ├─── COM ───── GND (Pin 9)
+           └─── NC ────── Kullanılmıyor
+```
 
 ## 🏗️ Bağlantı Şemaları
 
@@ -48,7 +83,9 @@ Raspberry Pi 4B ──┐
     │             │
     │             ┼─── GPIO 6 (PWM) ───► Biçme Motor PWM
     │             │
-    └─────────────┼─── GPIO 7 (DIR) ───► Biçme Motor DIR
+    │             ┼─── GPIO 7 (DIR) ───► Biçme Motor DIR
+    │             │
+    └─────────────┼─── GPIO 25 (PWM) ──► Lineer Aktüatör PWM
 ```
 
 ### Sensör Bağlantıları
@@ -69,13 +106,16 @@ Sağ Enkoder ───┬─── VCC ──── 5V (Pin 4)
                ├─── A ────── GPIO 20 (Pin 38)
                └─── B ────── GPIO 21 (Pin 40)
 
-IR Sensör 1 ───┬─── VCC ──── 3.3V (Pin 17)
+IR Sol ────────┬─── VCC ──── 3.3V (Pin 17)
                ├─── GND ──── GND (Pin 20)
                └─── OUT ──── GPIO 23 (Pin 16)
 
-IR Sensör 2 ───┬─── VCC ──── 3.3V (Pin 17)
+IR Sağ ────────┬─── VCC ──── 3.3V (Pin 17)
                ├─── GND ──── GND (Pin 25)
                └─── OUT ──── GPIO 24 (Pin 18)
+
+Emergency Stop ┬─── NO ───── GPIO 27 (Pin 13)
+               └─── COM ──── GND (Pin 9)
 ```
 
 ## ⚙️ Pin Konfigürasyonu
@@ -99,16 +139,26 @@ MOTOR_RIGHT_DIR = 26
 MOWER_PWM = 6
 MOWER_DIR = 7
 
+# Sensör pinleri
+IR_SENSOR_LEFT = 23
+IR_SENSOR_RIGHT = 24
+EMERGENCY_STOP = 27
+
 # Enkoder pinleri
 ENCODER_LEFT_A = 18
 ENCODER_LEFT_B = 19
 ENCODER_RIGHT_A = 20
 ENCODER_RIGHT_B = 21
 
-# Sensör pinleri
-IR_SENSOR_1 = 23
-IR_SENSOR_2 = 24
-LINEAR_ACTUATOR = 25
+# SPI LiDAR pinleri
+LIDAR_SPI_CE = 8
+LIDAR_SPI_MOSI = 10
+LIDAR_SPI_MISO = 9
+LIDAR_SPI_CLK = 11
+
+# I2C IMU pinleri
+IMU_SDA = 2  # I2C SDA
+IMU_SCL = 3  # I2C SCL
 
 # Pin kurulumları
 def setup_gpio():
@@ -119,26 +169,40 @@ def setup_gpio():
     GPIO.setup(MOTOR_RIGHT_DIR, GPIO.OUT)
     GPIO.setup(MOWER_PWM, GPIO.OUT)
     GPIO.setup(MOWER_DIR, GPIO.OUT)
-    
+
     # Enkoder pinleri - Giriş (pull-up ile)
     GPIO.setup(ENCODER_LEFT_A, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(ENCODER_LEFT_B, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(ENCODER_RIGHT_A, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(ENCODER_RIGHT_B, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    
+
     # Sensör pinleri - Giriş
-    GPIO.setup(IR_SENSOR_1, GPIO.IN)
-    GPIO.setup(IR_SENSOR_2, GPIO.IN)
-    
+    GPIO.setup(IR_SENSOR_LEFT, GPIO.IN)
+    GPIO.setup(IR_SENSOR_RIGHT, GPIO.IN)
+
     # Lineer aktüatör - Çıkış
     GPIO.setup(LINEAR_ACTUATOR, GPIO.OUT)
-    
+
     # PWM objelerini oluştur
     left_pwm = GPIO.PWM(MOTOR_LEFT_PWM, 20000)  # 20kHz
     right_pwm = GPIO.PWM(MOTOR_RIGHT_PWM, 20000)
     mower_pwm = GPIO.PWM(MOWER_PWM, 20000)
-    
+
     return left_pwm, right_pwm, mower_pwm
+```
+
+### PWM Kurulumu
+```python
+# Motor PWM'leri ayarla (1kHz frekans)
+pwm_freq = 1000
+left_motor_pwm = GPIO.PWM(MOTOR_LEFT_PWM, pwm_freq)
+right_motor_pwm = GPIO.PWM(MOTOR_RIGHT_PWM, pwm_freq)
+mower_pwm = GPIO.PWM(MOWER_PWM, pwm_freq)
+
+# PWM'leri başlat (%0 ile)
+left_motor_pwm.start(0)
+right_motor_pwm.start(0)
+mower_pwm.start(0)
 ```
 
 ## 🔧 Elektriksel Özellikler
@@ -157,7 +221,7 @@ def setup_gpio():
 ```
 Enkoder A/B Fazı:
      ┌───┐   ┌───┐   ┌───
-A ───┘   └───┘   └───┘   
+A ───┘   └───┘   └───┘
    ┌───┐   ┌───┐   ┌───┐
 B ─┘   └───┘   └───┘   └─
 
@@ -194,21 +258,21 @@ class GPIOProtection:
     def __init__(self):
         self.max_current = 3.0  # Ampere
         self.monitor_interval = 0.1  # saniye
-        
+
     def monitor_current(self):
         while True:
             # CPU sıcaklığını kontrol et
             temp = self.get_cpu_temp()
             if temp > 70:  # 70°C üzeri
                 self.emergency_stop()
-                
+
             time.sleep(self.monitor_interval)
-            
+
     def get_cpu_temp(self):
         with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
             temp = int(f.read().strip()) / 1000.0
         return temp
-        
+
     def emergency_stop(self):
         # Tüm PWM çıkışlarını durdur
         GPIO.output(MOTOR_LEFT_PWM, GPIO.LOW)
@@ -239,18 +303,18 @@ import time
 def test_all_pins():
     """Bütün pinleri tek tek test et"""
     print("🔧 Hacı Abi'nin GPIO Testi Başlıyor!")
-    
+
     setup_gpio()
-    
+
     print("📍 Motor pinlerini test ediyoruz...")
     test_motor_pins()
-    
+
     print("📍 Enkoder pinlerini test ediyoruz...")
     test_encoder_pins()
-    
+
     print("📍 Sensör pinlerini test ediyoruz...")
     test_sensor_pins()
-    
+
     print("✅ Tüm testler tamamlandı!")
     GPIO.cleanup()
 

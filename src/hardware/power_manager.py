@@ -56,8 +56,17 @@ class PowerConsumption:
 class PowerManager:
     """Güç yönetimi sınıfı"""
 
-    def __init__(self, config_path: str = "config/power_config.json"):
+    def __init__(
+        self, config_path: str = "config/power_config.json", simulate: bool = False
+    ):
         self.logger = logging.getLogger("PowerManager")
+
+        # Simülasyon kontrolü
+        self.simulate = simulate
+        if self.simulate:
+            self.logger.info("Güç yöneticisi simülasyon modunda başlatılıyor")
+        else:
+            self.logger.info("Güç yöneticisi gerçek donanım modunda başlatılıyor")
 
         # Konfigürasyon
         self.config = self._load_config(config_path)
@@ -231,38 +240,78 @@ class PowerManager:
 
     def _read_battery_voltage(self) -> float:
         """Batarya voltajını oku"""
-        # Gerçek implementasyonda ADC kullanılacak
-        # import board, busio, adafruit_ads1x15.ads1115 as ADS
+        if self.simulate:
+            # Simülasyon için rastgele değerler
+            import random
 
-        # Simülasyon için
-        import random
+            base_voltage = 25.6  # Nominal voltaj
+            if self.is_charging:
+                base_voltage = min(28.8, base_voltage + 1.0)
 
-        base_voltage = 25.6  # Nominal voltaj
-        if self.is_charging:
-            base_voltage = min(28.8, base_voltage + 1.0)
+            return base_voltage + random.uniform(-0.5, 0.5)
+        else:
+            # Gerçek ADC implementasyonu
+            try:
+                # import board, busio, adafruit_ads1x15.ads1115 as ADS
+                # i2c = busio.I2C(board.SCL, board.SDA)
+                # ads = ADS.ADS1115(i2c)
+                # chan = AnalogIn(ads, ADS.P0)
+                # voltage = chan.voltage * voltage_divider_ratio
 
-        return base_voltage + random.uniform(-0.5, 0.5)
+                # Şimdilik placeholder
+                return 25.6  # Gerçek sensörden okunacak
+            except Exception as e:
+                self.logger.error(f"Voltaj okuma hatası: {e}")
+                return 24.0  # Güvenli değer
 
     def _read_battery_current(self) -> float:
         """Batarya akımını oku"""
-        # Şarj akımı sensörü okuması (simülasyon)
-        import random
+        if self.simulate:
+            # Simülasyon için rastgele değerler
+            import random
 
-        if self.is_charging:
-            return random.uniform(5, 10)  # Şarj akımı
+            if self.is_charging:
+                return random.uniform(5, 10)  # Şarj akımı
+            else:
+                # Tüketim akımı (negatif)
+                total_consumption = sum(
+                    consumer.current_draw for consumer in self.power_consumers.values()
+                )
+                return -total_consumption - random.uniform(0, 1)
         else:
-            # Tüketim akımı (negatif)
-            total_consumption = sum(
-                consumer.current_draw for consumer in self.power_consumers.values()
-            )
-            return -total_consumption - random.uniform(0, 1)
+            # Gerçek akım sensöründen okuma
+            try:
+                # Hall effect akım sensörü (örn: ACS712)
+                # adc_value = read_adc_channel(current_sensor_pin)
+                # current = (adc_value - zero_offset) * sensitivity
+
+                # Şimdilik placeholder
+                if self.is_charging:
+                    return 8.0  # Gerçek sensörden okunacak
+                else:
+                    return -5.0  # Tüketim akımı
+            except Exception as e:
+                self.logger.error(f"Akım okuma hatası: {e}")
+                return 0.0
 
     def _read_battery_temperature(self) -> float:
         """Batarya sıcaklığını oku"""
-        # Sıcaklık sensörü okuması (simülasyon)
-        import random
+        if self.simulate:
+            # Simülasyon için rastgele sıcaklık
+            import random
 
-        return random.uniform(20, 35)  # °C
+            return random.uniform(20, 35)  # °C
+        else:
+            # Gerçek sıcaklık sensöründen okuma
+            try:
+                # DS18B20 veya NTC termistör
+                # temp_value = read_temperature_sensor()
+
+                # Şimdilik placeholder
+                return 25.0  # Gerçek sensörden okunacak
+            except Exception as e:
+                self.logger.error(f"Sıcaklık okuma hatası: {e}")
+                return 25.0  # Güvenli değer
 
     def _calculate_soc(self, voltage: float) -> float:
         """Voltajdan State of Charge hesapla"""
@@ -505,13 +554,18 @@ class PowerManager:
                 "statistics": self.get_battery_statistics(),
             }
 
-            # CSV dosyasına kaydet
-            filename = f"battery_log_{time.strftime('%Y%m%d')}.csv"
+            # CSV dosyasına kaydet (logs klasörüne)
+            import os
+
+            os.makedirs("logs", exist_ok=True)
+            filename = f"logs/battery_log_{time.strftime('%Y%m%d')}.csv"
             with open(filename, "a", encoding="utf-8") as f:
                 if f.tell() == 0:  # Dosya boşsa header ekle
-                    f.write(
-                        "timestamp,battery_level,voltage,current,power_state,is_charging\n"
+                    header = (
+                        "timestamp,battery_level,voltage,current,"
+                        "power_state,is_charging\n"
                     )
+                    f.write(header)
 
                 f.write(
                     f"{data['timestamp']},{data['battery_level']:.2f},"

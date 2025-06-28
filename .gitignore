@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# All logs are now in logs/ directory (already ignored below)
+# Individual log patterns removed - logs/ covers everything
+
 # C extensions
 *.so
 
@@ -45,6 +48,14 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+test_outputs/
+*_test_results.json
+*_test_report.html
+*_coverage.json
+*_coverage/
+test_results_*.json
+test_results.json
+pytest_cache/
 
 # Translations
 *.mo

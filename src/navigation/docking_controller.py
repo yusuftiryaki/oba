@@ -37,8 +37,16 @@ class DockingTarget:
 class DockingController:
     """Hassas docking maneuvralarını yöneten sınıf"""
 
-    def __init__(self):
+    def __init__(self, simulate: bool = False):
         self.logger = logging.getLogger("DockingController")
+
+        # Simülasyon kontrolü
+        self.simulate = simulate
+        if self.simulate:
+            self.logger.info("Docking kontrolcü simülasyon modunda başlatılıyor")
+        else:
+            self.logger.info("Docking kontrolcü gerçek donanım modunda başlatılıyor")
+
         self.state = DockingState.SEARCHING
 
         # Docking parametreleri
@@ -213,32 +221,52 @@ class DockingController:
 
     def _detect_apriltag(self) -> Optional[DockingTarget]:
         """AprilTag tespit et"""
-        try:
-            # Kamera görüntüsü al
-            image = self._get_camera_image()
-            if image is None:
-                return None
+        if self.simulate:
+            # Simülasyon modunda sanal AprilTag verisi üret
+            import random
 
-            # AprilTag detection (basit simülasyon)
-            # Gerçek implementasyonda apriltag kütüphanesi kullanılacak
-            apriltag_data = self._simulate_apriltag_detection(image)
-
-            if apriltag_data:
-                # AprilTag'den mesafe ve açı hesapla
-                distance = self._calculate_distance_from_apriltag(apriltag_data)
-                angle = self._calculate_angle_from_apriltag(apriltag_data)
-
+            if random.random() > 0.3:  # %70 tespit şansı
                 return DockingTarget(
-                    x=apriltag_data["center"][0],
-                    y=apriltag_data["center"][1],
-                    distance=distance,
-                    angle=angle,
-                    confidence=apriltag_data["confidence"],
+                    x=320 + random.uniform(-50, 50),  # Kamera merkezi civarı
+                    y=240 + random.uniform(-30, 30),
+                    distance=random.uniform(0.1, 2.0),  # 10cm - 2m
+                    angle=random.uniform(-0.1, 0.1),  # ±6 derece
+                    confidence=random.uniform(0.7, 0.95),
                     marker_type="apriltag",
                 )
+            return None
+        else:
+            # Gerçek AprilTag detection
+            try:
+                # Kamera görüntüsü al
+                image = self._get_camera_image()
+                if image is None:
+                    return None
 
-        except Exception as e:
-            self.logger.error(f"AprilTag tespit hatası: {e}")
+                # AprilTag detection (gerçek implementasyon)
+                # import apriltag
+                # detector = apriltag.Detector()
+                # results = detector.detect(gray_image)
+
+                # Şimdilik placeholder
+                apriltag_data = None  # Gerçek detection sonucu
+
+                if apriltag_data:
+                    distance = self._calculate_distance_from_apriltag(apriltag_data)
+                    angle = self._calculate_angle_from_apriltag(apriltag_data)
+
+                    return DockingTarget(
+                        x=apriltag_data["center"][0],
+                        y=apriltag_data["center"][1],
+                        distance=distance,
+                        angle=angle,
+                        confidence=apriltag_data["confidence"],
+                        marker_type="apriltag",
+                    )
+
+            except Exception as e:
+                self.logger.error(f"AprilTag tespit hatası: {e}")
+                return None
 
         return None
 

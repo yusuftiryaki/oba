@@ -26,11 +26,14 @@ class RobotState(Enum):
 class MainController:
     """Ana kontrol sınıfı - robot durumlarını ve geçişlerini yönetir"""
 
-    def __init__(self, config_path: str = "config/config.json"):
+    def __init__(self, config_path: str = "config/config.json", simulate: bool = False):
         self.state = RobotState.IDLE
         self.previous_state = RobotState.IDLE
         self.running = False
         self.emergency_stop = False
+
+        # Simülasyon kontrolü
+        self.simulate = simulate
 
         # Konfigürasyon yükleme
         self.config = self._load_config(config_path)
@@ -41,6 +44,7 @@ class MainController:
         self.power_manager = None
         self.docking_controller = None
         self.motor_controller = None
+        self.obstacle_avoidance = None  # YENİ: Engel kaçınma modülü
 
         # İstatistikler
         self.stats = {
@@ -90,11 +94,8 @@ class MainController:
 
     def _setup_logging(self):
         """Logging sistemini kur"""
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.FileHandler("oba_robot.log"), logging.StreamHandler()],
-        )
+        # NOT: main.py'deki logging config'i kullanılır
+        # Bu sadece logger referansı alır
         self.logger = logging.getLogger("OBA_MainController")
 
     def initialize_modules(self):
@@ -102,15 +103,17 @@ class MainController:
         try:
             from ..navigation.kalman_odometry import KalmanOdometry
             from ..navigation.path_planner import PathPlanner
+            from ..navigation.obstacle_avoidance import ObstacleAvoidance
             from ..hardware.power_manager import PowerManager
             from ..navigation.docking_controller import DockingController
             from ..hardware.motor_controller import MotorController
 
-            self.odometry = KalmanOdometry()
+            self.odometry = KalmanOdometry(simulate=self.simulate)
             self.path_planner = PathPlanner()
-            self.power_manager = PowerManager()
-            self.docking_controller = DockingController()
-            self.motor_controller = MotorController()
+            self.obstacle_avoidance = ObstacleAvoidance(simulate=self.simulate)
+            self.power_manager = PowerManager(simulate=self.simulate)
+            self.docking_controller = DockingController(simulate=self.simulate)
+            self.motor_controller = MotorController(simulate=self.simulate)
 
             self.logger.info("Tüm modüller başarıyla başlatıldı")
 
@@ -225,8 +228,32 @@ class MainController:
         next_waypoint = self.path_planner.get_next_waypoint(current_pos)
 
         if next_waypoint:
-            # Hedefe doğru hareket et
-            self.motor_controller.move_to_waypoint(next_waypoint)
+            # YENİ: Engel kaçınma sistemi entegrasyonu
+            if self.obstacle_avoidance:
+                # Sensör verilerini güncelle
+                ir_readings = self.obstacle_avoidance.get_real_ir_readings()
+                self.obstacle_avoidance.update_ir_sensors(ir_readings)
+
+                # Planned hareket komutunu al
+                planned_linear = 0.5  # Biçme hızı
+                planned_angular = 0.0  # Düz git
+
+                # Engel kaçınma komutu al
+                safe_command = self.obstacle_avoidance.get_avoidance_command(
+                    planned_linear, planned_angular, current_pos.x, current_pos.y
+                )
+
+                # Güvenli komutu motora gönder
+                self.motor_controller.set_drive_speed(
+                    safe_command["linear"], safe_command["angular"]
+                )
+
+                if self.obstacle_avoidance.avoidance_active:
+                    self.logger.info("🚧 Engel kaçınma aktif!")
+            else:
+                # Fallback: Normal hareket
+                self.motor_controller.move_to_waypoint(next_waypoint)
+
             self.stats["mowing_time"] += 0.1
         else:
             # Görev tamamlandı

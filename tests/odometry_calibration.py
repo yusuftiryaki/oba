@@ -63,13 +63,13 @@ class OdometryCalibration:
             left_ticks = int(ticks_per_cm)
             right_ticks = int(ticks_per_cm)
 
-            self.odometry.update_encoders(left_ticks, right_ticks)
+            self.odometry.update_encoder(left_ticks, right_ticks, 1000)  # 1000 PPR
             time.sleep(0.01)  # 10ms simülasyon delay
 
         # Son pozisyonu kontrol et
         end_pos = self.odometry.get_position()
         actual_distance = math.sqrt(
-            (end_pos.x - start_pos.x) ** 2 + (end_pos.y - start_pos.y) ** 2
+            (end_pos["x"] - start_pos["x"]) ** 2 + (end_pos["y"] - start_pos["y"]) ** 2
         )
 
         error_percent = abs(actual_distance - 1.0) / 1.0 * 100
@@ -108,27 +108,32 @@ class OdometryCalibration:
         for step in range(steps):
             # IMU verisi simülasyonu (1° dönem/adım)
             gyro_z = math.radians(1.0)  # 1°/adım
-            self.odometry.update_imu(accel=[0, 0, 9.8], gyro=[0, 0, gyro_z])
+            self.odometry.update_imu(gyro_z)  # Sadece heading geçir
 
             # Enkoder verisi
-            self.odometry.update_encoders(-ticks_per_step, ticks_per_step)
+            self.odometry.update_encoder(-ticks_per_step, ticks_per_step, 1000)
             time.sleep(0.01)
 
         end_pos = self.odometry.get_position()
-        final_heading = end_pos.heading % 360
+        final_heading = end_pos["heading"]
 
         # Pozisyon drift kontrolü
         position_drift = math.sqrt(
-            (end_pos.x - start_pos.x) ** 2 + (end_pos.y - start_pos.y) ** 2
+            (end_pos["x"] - start_pos["x"]) ** 2 + (end_pos["y"] - start_pos["y"]) ** 2
         )
 
-        heading_error = abs(final_heading - start_pos.heading) % 360
-        if heading_error > 180:
-            heading_error = 360 - heading_error
+        heading_error = abs(final_heading - start_pos["heading"])
+        if heading_error > math.pi:
+            heading_error = 2 * math.pi - heading_error
 
-        print(f"     Başlangıç yönü: {start_pos.heading:.1f}°")
-        print(f"     Final yönü: {final_heading:.1f}°")
-        print(f"     Yön hatası: {heading_error:.2f}°")
+        # Radyandan dereceye çevir
+        heading_error_deg = math.degrees(heading_error)
+        final_heading_deg = math.degrees(final_heading)
+        start_heading_deg = math.degrees(start_pos["heading"])
+
+        print(f"     Başlangıç yönü: {start_heading_deg:.1f}°")
+        print(f"     Final yönü: {final_heading_deg:.1f}°")
+        print(f"     Yön hatası: {heading_error_deg:.2f}°")
         print(f"     Pozisyon drift: {position_drift:.3f} m")
 
         self.test_results["rotation"] = {
@@ -155,7 +160,7 @@ class OdometryCalibration:
             total_ticks = int(ticks_per_meter)
 
             for tick in range(0, total_ticks, 10):  # 10'ar tick adımlar
-                self.odometry.update_encoders(10, 10)
+                self.odometry.update_encoder(10, 10, 1000)
                 time.sleep(0.001)
 
             # 90° sağa dönme
@@ -164,26 +169,26 @@ class OdometryCalibration:
             rotation_ticks = int(rotation_distance / wheel_circumference * 1024)
 
             for tick in range(0, rotation_ticks, 5):
-                self.odometry.update_encoders(-5, 5)
-                # IMU verisi
+                self.odometry.update_encoder(-5, 5, 1000)
+                # IMU verisi - sadece heading güncellemesi
                 self.odometry.update_imu(
-                    accel=[0, 0, 9.8], gyro=[0, 0, math.radians(2)]  # 2°/adım
+                    heading=math.radians(2), angular_velocity=math.radians(2)  # 2°/adım
                 )
                 time.sleep(0.001)
 
         end_pos = self.odometry.get_position()
 
         # Başlangıç noktasına dönüş hatası
-        return_error = math.sqrt(
-            (end_pos.x - start_pos.x) ** 2 + (end_pos.y - start_pos.y) ** 2
-        )
+        dx = end_pos["x"] - start_pos["x"]
+        dy = end_pos["y"] - start_pos["y"]
+        return_error = math.sqrt(dx**2 + dy**2)
 
-        heading_error = abs((end_pos.heading - start_pos.heading) % 360)
+        heading_error = abs((end_pos["heading"] - start_pos["heading"]) % 360)
         if heading_error > 180:
             heading_error = 360 - heading_error
 
-        print(f"     Başlangıç: ({start_pos.x:.3f}, {start_pos.y:.3f})")
-        print(f"     Bitiş: ({end_pos.x:.3f}, {end_pos.y:.3f})")
+        print(f"     Başlangıç: ({start_pos['x']:.3f}, {start_pos['y']:.3f})")
+        print(f"     Bitiş: ({end_pos['x']:.3f}, {end_pos['y']:.3f})")
         print(f"     Geri dönüş hatası: {return_error:.3f} m")
         print(f"     Yön hatası: {heading_error:.2f}°")
 
@@ -210,23 +215,22 @@ class OdometryCalibration:
         # 10 saniye boyunca hareket
         for second in range(10):
             for step in range(10):  # 10 Hz
-                self.odometry.update_encoders(left_ticks, right_ticks)
+                self.odometry.update_encoder(left_ticks, right_ticks, 1000)
 
                 # IMU verisi ekle (drift düzeltme için)
                 if step % 5 == 0:  # 2 Hz IMU güncelleme
                     self.odometry.update_imu(
-                        accel=[0.1, 0, 9.8],  # Hafif yan ivme
-                        gyro=[0, 0, 0.01],  # Hafif yaw drift
+                        heading=0.01, angular_velocity=0.01  # Hafif yaw drift
                     )
 
                 pos = self.odometry.get_position()
-                positions.append((pos.x, pos.y, pos.heading))
+                positions.append((pos["x"], pos["y"], pos["heading"]))
                 time.sleep(0.001)
 
         # Drift analizi
         final_pos = self.odometry.get_position()
         expected_heading = 0.0  # Düz gitmeyi bekliyoruz
-        actual_heading = final_pos.heading
+        actual_heading = final_pos["heading"]
 
         drift_angle = abs(actual_heading - expected_heading)
         if drift_angle > 180:
@@ -260,10 +264,10 @@ class OdometryCalibration:
         for step in range(steps):
             # Her adımda 1° dönme
             gyro_z = math.radians(1.0)
-            self.odometry.update_imu(accel=[0, 0, 9.8], gyro=[0, 0, gyro_z])
+            self.odometry.update_imu(heading=gyro_z, angular_velocity=gyro_z)
             time.sleep(0.001)
 
-        imu_only_heading = self.odometry.get_position().heading
+        imu_only_heading = self.odometry.get_position()["heading"]
 
         # Enkoder + IMU kombinasyonu testi
         print("     Enkoder + IMU kombinasyonu...")
@@ -279,14 +283,14 @@ class OdometryCalibration:
 
         for step in range(steps):
             # Enkoder verisi
-            self.odometry.update_encoders(-ticks_per_step, ticks_per_step)
+            self.odometry.update_encoder(-ticks_per_step, ticks_per_step, 1000)
 
             # IMU verisi
             gyro_z = math.radians(1.0)
-            self.odometry.update_imu(accel=[0, 0, 9.8], gyro=[0, 0, gyro_z])
+            self.odometry.update_imu(heading=gyro_z, angular_velocity=gyro_z)
             time.sleep(0.001)
 
-        combined_heading = self.odometry.get_position().heading
+        combined_heading = self.odometry.get_position()["heading"]
 
         imu_error = abs(imu_only_heading - target_rotation)
         combined_error = abs(combined_heading - target_rotation)
@@ -331,15 +335,20 @@ class OdometryCalibration:
         if "straight_line" in self.test_results:
             error = self.test_results["straight_line"]["error_percent"]
             if error > 2.0:
-                print(f"• Tekerlek çap kalibrasyonu gerekli (hata: %{error:.1f})")
+                msg = "• Tekerlek çap kalibrasyonu gerekli"
+                msg += f" (hata: %{error:.1f})"
+                print(msg)
 
         if "rotation" in self.test_results:
             error = self.test_results["rotation"]["heading_error"]
             if error > 2.0:
-                print(f"• Robot genişlik kalibrasyonu gerekli (hata: {error:.1f}°)")
+                msg = "• Robot genişlik kalibrasyonu gerekli"
+                msg += f" (hata: {error:.1f}°)"
+                print(msg)
 
         if "drift_compensation" in self.test_results:
-            if not self.test_results["drift_compensation"]["compensation_effective"]:
+            drift_result = self.test_results["drift_compensation"]
+            if not drift_result["compensation_effective"]:
                 print("• Kalman filtre parametreleri ayarlanmalı")
 
         if passed_tests == total_tests:
