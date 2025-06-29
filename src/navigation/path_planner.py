@@ -280,9 +280,9 @@ class PathPlanner:
                 area_data = {
                     "id": area.id,
                     "name": area.name,
-                    "boundary": [[p.x, p.y] for p in area.boundary],
+                    "boundary": [{"x": p.x, "y": p.y} for p in area.boundary],
                     "obstacles": [
-                        [[p.x, p.y] for p in obstacle]
+                        [{"x": p.x, "y": p.y} for p in obstacle]
                         for obstacle in (area.obstacles or [])
                     ],
                     "pattern": area.pattern.value,

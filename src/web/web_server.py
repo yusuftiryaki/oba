@@ -145,6 +145,175 @@ class WebServer:
                 return jsonify({"success": success})
             return jsonify({"error": "Main controller not available"}), 503
 
+        @self.app.route("/api/areas", methods=["POST"])
+        def api_create_area():
+            """Yeni alan oluştur"""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({"success": False, "error": "No data provided"}), 400
+
+                area_id = data.get("id")
+                name = data.get("name")
+                boundary = data.get("boundary", [])
+
+                if not area_id or not name or len(boundary) < 3:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Missing required fields or invalid boundary",
+                            }
+                        ),
+                        400,
+                    )
+
+                if self.path_planner:
+                    # Yeni alan objesi oluştur
+                    from src.navigation.path_planner import Area, Point, PatternType
+
+                    new_area = Area(
+                        id=area_id,
+                        name=name,
+                        boundary=[Point(p["x"], p["y"]) for p in boundary],
+                        obstacles=[],
+                        pattern=PatternType(data.get("pattern", "lawn_mower")),
+                        blade_height=data.get("blade_height", 5),
+                        speed=data.get("speed", 0.5),
+                        overlap=data.get("overlap", 0.1),
+                    )
+
+                    # Path planner'a ekle
+                    self.path_planner.areas[area_id] = new_area
+                    self.path_planner._save_areas()
+
+                    self.logger.info(f"Yeni alan oluşturuldu: {area_id}")
+                    return jsonify({"success": True, "area_id": area_id})
+                else:
+                    return (
+                        jsonify(
+                            {"success": False, "error": "Path planner not available"}
+                        ),
+                        503,
+                    )
+
+            except Exception as e:
+                self.logger.error(f"Alan oluşturma hatası: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/areas/<area_id>", methods=["PUT"])
+        def api_update_area(area_id):
+            """Alan güncelle"""
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({"success": False, "error": "No data provided"}), 400
+
+                if self.path_planner and area_id in self.path_planner.areas:
+                    area = self.path_planner.areas[area_id]
+
+                    # Alan bilgilerini güncelle
+                    if "name" in data:
+                        area.name = data["name"]
+                    if "blade_height" in data:
+                        area.blade_height = data["blade_height"]
+                    if "speed" in data:
+                        area.speed = data["speed"]
+                    if "pattern" in data:
+                        from src.navigation.path_planner import PatternType
+
+                        area.pattern = PatternType(data["pattern"])
+                    if "boundary" in data:
+                        from src.navigation.path_planner import Point
+
+                        area.boundary = [
+                            Point(p["x"], p["y"]) for p in data["boundary"]
+                        ]
+
+                    # Değişiklikleri kaydet
+                    self.path_planner._save_areas()
+
+                    self.logger.info(f"Alan güncellendi: {area_id}")
+                    return jsonify({"success": True})
+                else:
+                    return jsonify({"success": False, "error": "Area not found"}), 404
+
+            except Exception as e:
+                self.logger.error(f"Alan güncelleme hatası: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/areas/<area_id>", methods=["DELETE"])
+        def api_delete_area(area_id):
+            """Alan sil"""
+            try:
+                if self.path_planner and area_id in self.path_planner.areas:
+                    del self.path_planner.areas[area_id]
+                    self.path_planner._save_areas()
+
+                    self.logger.info(f"Alan silindi: {area_id}")
+                    return jsonify({"success": True})
+                else:
+                    return jsonify({"success": False, "error": "Area not found"}), 404
+
+            except Exception as e:
+                self.logger.error(f"Alan silme hatası: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/areas/<area_id>", methods=["GET"])
+        def api_get_area(area_id):
+            """Tek alan detayını getir"""
+            try:
+                if self.path_planner and area_id in self.path_planner.areas:
+                    area = self.path_planner.areas[area_id]
+                    area_data = {
+                        "id": area.id,
+                        "name": area.name,
+                        "boundary": [{"x": p.x, "y": p.y} for p in area.boundary],
+                        "obstacles": [
+                            [{"x": p.x, "y": p.y} for p in obs]
+                            for obs in (area.obstacles or [])
+                        ],
+                        "pattern": area.pattern.value,
+                        "blade_height": area.blade_height,
+                        "speed": area.speed,
+                        "overlap": area.overlap,
+                    }
+                    return jsonify(area_data)
+                else:
+                    return jsonify({"error": "Area not found"}), 404
+
+            except Exception as e:
+                self.logger.error(f"Alan getirme hatası: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/areas/<area_id>/stop", methods=["POST"])
+        def api_stop_mowing(area_id):
+            """Biçme görevini durdur"""
+            try:
+                if self.main_controller:
+                    # Robotu IDLE durumuna geçir
+                    from src.core.main_controller import RobotState
+
+                    self.main_controller.state = RobotState.IDLE
+
+                    # Motorları durdur
+                    if self.motor_controller:
+                        self.motor_controller.stop_all()
+
+                    self.logger.info(f"Biçme görevi durduruldu: {area_id}")
+                    return jsonify({"success": True})
+                else:
+                    return (
+                        jsonify(
+                            {"success": False, "error": "Main controller not available"}
+                        ),
+                        503,
+                    )
+
+            except Exception as e:
+                self.logger.error(f"Biçme durdurma hatası: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
         @self.app.route("/api/monitoring")
         def api_monitoring():
             """İzleme paneli için detaylı sistem bilgisi"""

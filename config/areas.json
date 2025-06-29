@@ -2,158 +2,76 @@
   "areas": [
     {
       "id": "front_yard",
-      "name": "Ön Bahçe",
+      "name": "Güncellenen Ön Bahçe",
       "boundary": [
-        {"x": 0, "y": 0},
-        {"x": 20, "y": 0},
-        {"x": 20, "y": 15},
-        {"x": 0, "y": 15}
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 20,
+          "y": 0
+        },
+        {
+          "x": 20,
+          "y": 15
+        },
+        {
+          "x": 0,
+          "y": 15
+        }
       ],
       "obstacles": [
         [
-          {"x": 8, "y": 5},
-          {"x": 12, "y": 5},
-          {"x": 12, "y": 8},
-          {"x": 8, "y": 8}
+          {
+            "x": 8,
+            "y": 5
+          },
+          {
+            "x": 12,
+            "y": 5
+          },
+          {
+            "x": 12,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 8
+          }
         ]
       ],
       "pattern": "lawn_mower",
-      "blade_height": 5,
-      "speed": 0.5,
-      "overlap": 0.1,
-      "priority": 1
+      "blade_height": 8,
+      "speed": 0.6,
+      "overlap": 0.1
     },
     {
-      "id": "back_garden",
-      "name": "Arka Bahçe",
+      "id": "area_1751222390969",
+      "name": "Yeni Alan",
       "boundary": [
-        {"x": 0, "y": 20},
-        {"x": 25, "y": 20},
-        {"x": 25, "y": 40},
-        {"x": 0, "y": 40}
-      ],
-      "obstacles": [
-        [
-          {"x": 10, "y": 25},
-          {"x": 15, "y": 25},
-          {"x": 15, "y": 30},
-          {"x": 10, "y": 30}
-        ],
-        [
-          {"x": 18, "y": 32},
-          {"x": 22, "y": 32},
-          {"x": 22, "y": 37},
-          {"x": 18, "y": 37}
-        ]
-      ],
-      "pattern": "lawn_mower",
-      "blade_height": 7,
-      "speed": 0.4,
-      "overlap": 0.15,
-      "priority": 2
-    },
-    {
-      "id": "side_area",
-      "name": "Yan Alan",
-      "boundary": [
-        {"x": 25, "y": 0},
-        {"x": 35, "y": 0},
-        {"x": 35, "y": 20},
-        {"x": 25, "y": 20}
+        {
+          "x": 28.9,
+          "y": 25.4
+        },
+        {
+          "x": 6.2,
+          "y": 19.2
+        },
+        {
+          "x": 6.5,
+          "y": 26.3
+        },
+        {
+          "x": 28.4,
+          "y": 19.2
+        }
       ],
       "obstacles": [],
       "pattern": "spiral",
       "blade_height": 5,
-      "speed": 0.3,
-      "overlap": 0.1,
-      "priority": 3
-    },
-    {
-      "id": "test_square",
-      "name": "Test Kare Alan",
-      "boundary": [
-        {"x": 0, "y": 0},
-        {"x": 10, "y": 0},
-        {"x": 10, "y": 10},
-        {"x": 0, "y": 10}
-      ],
-      "obstacles": [],
-      "pattern": "lawn_mower",
-      "blade_height": 5,
-      "speed": 0.5,
-      "overlap": 0.1,
-      "priority": 10
-    },
-    {
-      "id": "orchard_section_1",
-      "name": "Meyve Bahçesi Bölüm 1",
-      "boundary": [
-        {"x": 40, "y": 0},
-        {"x": 60, "y": 0},
-        {"x": 60, "y": 30},
-        {"x": 40, "y": 30}
-      ],
-      "obstacles": [
-        [
-          {"x": 45, "y": 5},
-          {"x": 47, "y": 5},
-          {"x": 47, "y": 7},
-          {"x": 45, "y": 7}
-        ],
-        [
-          {"x": 52, "y": 8},
-          {"x": 54, "y": 8},
-          {"x": 54, "y": 10},
-          {"x": 52, "y": 10}
-        ],
-        [
-          {"x": 46, "y": 15},
-          {"x": 48, "y": 15},
-          {"x": 48, "y": 17},
-          {"x": 46, "y": 17}
-        ],
-        [
-          {"x": 53, "y": 18},
-          {"x": 55, "y": 18},
-          {"x": 55, "y": 20},
-          {"x": 53, "y": 20}
-        ],
-        [
-          {"x": 48, "y": 25},
-          {"x": 50, "y": 25},
-          {"x": 50, "y": 27},
-          {"x": 48, "y": 27}
-        ]
-      ],
-      "pattern": "perimeter_first",
-      "blade_height": 3,
-      "speed": 0.3,
-      "overlap": 0.2,
-      "priority": 1,
-      "description": "Elma ağaçları arasındaki alan, dikkatli biçim gerekli"
+      "speed": 0.2,
+      "overlap": 0.1
     }
-  ],
-  "charging_stations": [
-    {
-      "id": "main_station",
-      "name": "Ana Şarj İstasyonu",
-      "position": {"x": 0, "y": 0},
-      "type": "solar_powered",
-      "capacity": "100Ah",
-      "solar_panel": "150W",
-      "active": true
-    }
-  ],
-  "waypoints": {
-    "charging_approach": [
-      {"x": -2, "y": -2},
-      {"x": -1, "y": -1},
-      {"x": 0, "y": 0}
-    ],
-    "emergency_spots": [
-      {"x": 5, "y": 5},
-      {"x": 15, "y": 15},
-      {"x": 25, "y": 25}
-    ]
-  }
+  ]
 }

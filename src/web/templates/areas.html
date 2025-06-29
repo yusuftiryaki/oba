@@ -11,6 +11,7 @@
         margin-bottom: 15px;
         background: #f9f9f9;
     }
+
     .area-map {
         width: 100%;
         height: 300px;
@@ -19,6 +20,7 @@
         position: relative;
         cursor: crosshair;
     }
+
     .area-point {
         position: absolute;
         width: 8px;
@@ -28,20 +30,42 @@
         cursor: pointer;
         transform: translate(-50%, -50%);
     }
+
     .area-polygon {
         position: absolute;
         border: 2px solid #007bff;
         background: rgba(0, 123, 255, 0.1);
         pointer-events: none;
     }
+
     .btn-group {
         margin-bottom: 10px;
     }
+
     .area-stats {
         background: #e9ecef;
         padding: 10px;
         border-radius: 4px;
         margin-top: 10px;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+    }
+
+    .area-highlight {
+        pointer-events: none;
+        z-index: 10;
     }
 </style>
 {% endblock %}
@@ -51,74 +75,12 @@
     <div class="row">
         <div class="col-md-8">
             <h2>🏞️ Çalışma Alanları</h2>
-            
+
             <!-- Alan Listesi -->
             <div id="area-list">
-                <div class="area-card" data-area-id="alan1">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5>🌱 Doğu Bahçe</h5>
-                            <p class="text-muted">30m x 20m alan (600 m²)</p>
-                            <div class="area-stats">
-                                <small>
-                                    <strong>Son Biçim:</strong> 25 Haziran 2025<br>
-                                    <strong>Toplam Biçim:</strong> 12 kez<br>
-                                    <strong>Tahmini Süre:</strong> 45 dakika
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <div class="btn-group-vertical">
-                                <button class="btn btn-success btn-sm" onclick="startMowing('alan1')">
-                                    ✂️ Biç
-                                </button>
-                                <button class="btn btn-primary btn-sm" onclick="editArea('alan1')">
-                                    ✏️ Düzenle
-                                </button>
-                                <button class="btn btn-warning btn-sm" onclick="showArea('alan1')">
-                                    👁️ Göster
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteArea('alan1')">
-                                    🗑️ Sil
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="area-card" data-area-id="alan2">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5>🍎 Batı Meyve Bahçesi</h5>
-                            <p class="text-muted">25m x 15m alan (375 m²)</p>
-                            <div class="area-stats">
-                                <small>
-                                    <strong>Son Biçim:</strong> 23 Haziran 2025<br>
-                                    <strong>Toplam Biçim:</strong> 8 kez<br>
-                                    <strong>Tahmini Süre:</strong> 30 dakika
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <div class="btn-group-vertical">
-                                <button class="btn btn-success btn-sm" onclick="startMowing('alan2')">
-                                    ✂️ Biç
-                                </button>
-                                <button class="btn btn-primary btn-sm" onclick="editArea('alan2')">
-                                    ✏️ Düzenle
-                                </button>
-                                <button class="btn btn-warning btn-sm" onclick="showArea('alan2')">
-                                    👁️ Göster
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteArea('alan2')">
-                                    🗑️ Sil
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Dinamik alan kartları buraya JavaScript ile yüklenecek -->
             </div>
-            
+
             <!-- Yeni Alan Ekleme -->
             <div class="card mt-3">
                 <div class="card-header">
@@ -134,7 +96,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <!-- Harita/Planlama Paneli -->
             <div class="card">
@@ -154,17 +116,17 @@
                 </div>
                 <div class="card-body">
                     <div class="area-map" id="area-map">
-                        <!-- Dinamik olarak oluşturulacak alan gösterimi -->
-                        <div class="area-polygon" style="left: 20px; top: 20px; width: 120px; height: 80px;" title="Doğu Bahçe"></div>
-                        <div class="area-polygon" style="left: 160px; top: 120px; width: 100px; height: 60px;" title="Batı Meyve Bahçesi"></div>
-                        
+                        <!-- Dinamik alan görselleştirmeleri buraya JavaScript ile eklenecek -->
+
                         <!-- Robot pozisyonu -->
-                        <div class="area-point" style="left: 50%; top: 50%; background: #dc3545;" title="Robot Pozisyonu"></div>
-                        
+                        <div class="area-point" style="left: 50%; top: 50%; background: #dc3545;"
+                            title="Robot Pozisyonu"></div>
+
                         <!-- Şarj istasyonu -->
-                        <div class="area-point" style="left: 10%; top: 10%; background: #28a745;" title="Şarj İstasyonu"></div>
+                        <div class="area-point" style="left: 10%; top: 10%; background: #28a745;"
+                            title="Şarj İstasyonu"></div>
                     </div>
-                    
+
                     <div class="mt-3">
                         <small class="text-muted">
                             <strong>Açıklama:</strong><br>
@@ -176,7 +138,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Alan İstatistikleri -->
             <div class="card mt-3">
                 <div class="card-header">
@@ -216,8 +178,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">✏️ Alan Düzenle</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
             <div class="modal-body">
@@ -226,18 +187,18 @@
                         <label>Alan Adı:</label>
                         <input type="text" class="form-control" id="areaName" placeholder="Örn: Doğu Bahçe">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Biçme Ayarları:</label>
                         <div class="row">
                             <div class="col-md-6">
-                                <label class="small">Biçme Yüksekliği:</label>
+                                <label class="small">Biçme Yüksekliği (cm):</label>
                                 <select class="form-control" id="cuttingHeight">
-                                    <option value="1">Seviye 1 (En Düşük)</option>
-                                    <option value="2">Seviye 2</option>
-                                    <option value="3" selected>Seviye 3 (Orta)</option>
-                                    <option value="4">Seviye 4</option>
-                                    <option value="5">Seviye 5 (En Yüksek)</option>
+                                    <option value="3">3 cm (En Düşük)</option>
+                                    <option value="5" selected>5 cm (Normal)</option>
+                                    <option value="7">7 cm (Orta)</option>
+                                    <option value="10">10 cm (Yüksek)</option>
+                                    <option value="12">12 cm (En Yüksek)</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -250,23 +211,23 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Biçme Düzeni:</label>
                         <select class="form-control" id="mowingPattern">
-                            <option value="boustrophedon" selected>Biçerdöver (Paralel)</option>
+                            <option value="lawn_mower" selected>Biçerdöver (Paralel)</option>
                             <option value="spiral">Spiral</option>
                             <option value="random">Rastgele</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Koordinatlar:</label>
-                        <textarea class="form-control" id="areaCoordinates" rows="4" 
-                                  placeholder="(0,0), (30,0), (30,20), (0,20)"></textarea>
+                        <textarea class="form-control" id="areaCoordinates" rows="4"
+                            placeholder="(0,0), (30,0), (30,20), (0,20)"></textarea>
                         <small class="text-muted">Her satıra bir koordinat çifti (x,y) yazın</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <div class="custom-control custom-checkbox">
                             <input type="checkbox" class="custom-control-input" id="enableSchedule">
@@ -275,7 +236,7 @@
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="form-group" id="scheduleOptions" style="display: none;">
                         <label>Zamanlama:</label>
                         <div class="row">
@@ -294,7 +255,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     ❌ İptal
                 </button>
                 <button type="button" class="btn btn-primary" onclick="saveArea()">
@@ -306,258 +267,612 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script>
-let currentMapMode = 'view';
-let selectedArea = null;
-let newAreaPoints = [];
+    let currentMapMode = 'view';
+    let selectedArea = null;
+    let newAreaPoints = [];
 
-// Harita modu değiştirme
-function setMapMode(mode) {
-    currentMapMode = mode;
-    $('.btn-group .btn').removeClass('active');
-    $(`button[onclick="setMapMode('${mode}')"]`).addClass('active');
-    
-    const map = document.getElementById('area-map');
-    
-    switch(mode) {
-        case 'view':
-            map.style.cursor = 'default';
-            break;
-        case 'edit':
-            map.style.cursor = 'grab';
-            break;
-        case 'create':
-            map.style.cursor = 'crosshair';
-            newAreaPoints = [];
-            break;
+    // Harita modu değiştirme
+    function setMapMode(mode) {
+        currentMapMode = mode;
+        $('.btn-group .btn').removeClass('active');
+        $(`button[onclick="setMapMode('${mode}')"]`).addClass('active');
+
+        const map = document.getElementById('area-map');
+
+        switch (mode) {
+            case 'view':
+                map.style.cursor = 'default';
+                break;
+            case 'edit':
+                map.style.cursor = 'grab';
+                break;
+            case 'create':
+                map.style.cursor = 'crosshair';
+                newAreaPoints = [];
+                break;
+        }
     }
-}
 
-// Alan biçme başlatma
-function startMowing(areaId) {
-    if (confirm(`${areaId} alanında biçme işlemini başlatmak istiyor musunuz?`)) {
-        showNotification('🚀 Biçme işlemi başlatıldı!', 'success');
-        
-        // WebSocket ile robot komutunu gönder
-        if (socket) {
-            socket.emit('start_mowing', {
-                area_id: areaId,
-                cutting_height: 3,
-                speed: 0.4
+    // Alan biçme başlatma
+    function startMowing(areaId) {
+        if (confirm(`${areaId} alanında biçme işlemini başlatmak istiyor musunuz?`)) {
+            // Gerçek API çağrısı
+            fetch(`/api/areas/${areaId}/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('🚀 Biçme işlemi başlatıldı!', 'success');
+                        // Alan kartındaki durumu güncelle
+                        updateAreaStatus(areaId, 'Biçiliyor');
+                    } else {
+                        showNotification(`❌ Biçme başlatılamadı: ${data.error}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Biçme başlatma hatası:', error);
+                    showNotification('❌ Bağlantı hatası', 'danger');
+                });
+        }
+    }
+
+    // Alan düzenleme
+    function editArea(areaId) {
+        selectedArea = areaId;
+
+        // Gerçek API'den alan bilgilerini yükle
+        fetch(`/api/areas/${areaId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNotification(`❌ Alan bulunamadı: ${data.error}`, 'danger');
+                    return;
+                }
+
+                // Modal'daki form alanlarını doldur
+                document.getElementById('areaName').value = data.name;
+                document.getElementById('cuttingHeight').value = data.blade_height;
+                document.getElementById('mowingSpeed').value = data.speed;
+                document.getElementById('mowingPattern').value = data.pattern;
+
+                // Koordinatları string formatına çevir
+                const coordString = data.boundary.map(p =>
+                    `(${p.x.toFixed(1)},${p.y.toFixed(1)})`
+                ).join(', ');
+                document.getElementById('areaCoordinates').value = coordString;
+
+                // Modal'ı göster
+                const modal = new bootstrap.Modal(document.getElementById('editAreaModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Alan yükleme hatası:', error);
+                showNotification('❌ Alan bilgileri yüklenemedi', 'danger');
             });
-        }
     }
-}
 
-// Alan düzenleme
-function editArea(areaId) {
-    selectedArea = areaId;
-    
-    // Alan bilgilerini yükle (gerçek uygulamada API'den gelir)
-    const areaData = {
-        'alan1': {
-            name: 'Doğu Bahçe',
-            cutting_height: 3,
-            speed: 0.4,
-            pattern: 'boustrophedon',
-            coordinates: '(0,0), (30,0), (30,20), (0,20)'
-        },
-        'alan2': {
-            name: 'Batı Meyve Bahçesi',
-            cutting_height: 2,
-            speed: 0.3,
-            pattern: 'spiral',
-            coordinates: '(5,5), (30,5), (30,20), (5,20)'
-        }
-    };
-    
-    const data = areaData[areaId];
-    if (data) {
-        $('#areaName').val(data.name);
-        $('#cuttingHeight').val(data.cutting_height);
-        $('#mowingSpeed').val(data.speed);
-        $('#mowingPattern').val(data.pattern);
-        $('#areaCoordinates').val(data.coordinates);
-        
-        $('#editAreaModal').modal('show');
+    // Alan gösterme/gizleme
+    function showArea(areaId) {
+        // Alan kartını vurgula
+        $('.area-card').removeClass('border-primary');
+        const areaCard = $(`.area-card[data-area-id="${areaId}"]`);
+        areaCard.addClass('border-primary');
+
+        // Alan bilgilerini API'den getir
+        fetch(`/api/areas/${areaId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showNotification(`❌ Alan bulunamadı: ${data.error}`, 'danger');
+                    return;
+                }
+
+                // Haritada alanı vurgula
+                highlightAreaOnMap(data.boundary);
+
+                // Alan detay bilgilerini göster
+                showAreaDetails(data);
+            })
+            .catch(error => {
+                console.error('Alan gösterme hatası:', error);
+                showNotification('❌ Alan bilgileri yüklenemedi', 'danger');
+            });
     }
-}
 
-// Alan gösterme/gizleme
-function showArea(areaId) {
-    const areaCard = $(`.area-card[data-area-id="${areaId}"]`);
-    areaCard.toggleClass('border-primary');
-    
-    // Haritada vurgula
-    // Implementation burada olabilir
-}
+    // Haritada alanı vurgula
+    function highlightAreaOnMap(boundary) {
+        // Önce eski vurguları temizle
+        $('.area-highlight').remove();
 
-// Alan silme
-function deleteArea(areaId) {
-    if (confirm('Bu alanı silmek istediğinizden emin misiniz?')) {
-        $(`.area-card[data-area-id="${areaId}"]`).fadeOut(() => {
-            $(this).remove();
+        if (boundary.length < 3) return;
+
+        // Alan sınırlarını hesapla
+        const minX = Math.min(...boundary.map(p => p.x));
+        const minY = Math.min(...boundary.map(p => p.y));
+        const maxX = Math.max(...boundary.map(p => p.x));
+        const maxY = Math.max(...boundary.map(p => p.y));
+
+        // Harita boyutlarına göre piksel koordinatlarına çevir
+        const mapWidth = $('#area-map').width();
+        const mapHeight = $('#area-map').height();
+
+        const pixelMinX = (minX / 50) * mapWidth;
+        const pixelMinY = (minY / 30) * mapHeight;
+        const pixelMaxX = (maxX / 50) * mapWidth;
+        const pixelMaxY = (maxY / 30) * mapHeight;
+
+        // Vurgulama alanı oluştur
+        const highlight = $('<div class="area-highlight"></div>');
+        highlight.css({
+            position: 'absolute',
+            left: pixelMinX + 'px',
+            top: pixelMinY + 'px',
+            width: (pixelMaxX - pixelMinX) + 'px',
+            height: (pixelMaxY - pixelMinY) + 'px',
+            border: '3px solid #ffc107',
+            background: 'rgba(255, 193, 7, 0.2)',
+            borderRadius: '4px',
+            animation: 'pulse 2s infinite'
         });
-        showNotification('🗑️ Alan silindi', 'warning');
+
+        $('#area-map').append(highlight);
+
+        // 5 saniye sonra vurguyu kaldır
+        setTimeout(() => {
+            highlight.fadeOut(() => highlight.remove());
+        }, 5000);
     }
-}
 
-// Alan kaydetme
-function saveArea() {
-    const areaData = {
-        name: $('#areaName').val(),
-        cutting_height: parseInt($('#cuttingHeight').val()),
-        speed: parseFloat($('#mowingSpeed').val()),
-        pattern: $('#mowingPattern').val(),
-        coordinates: $('#areaCoordinates').val(),
-        schedule_enabled: $('#enableSchedule').is(':checked'),
-        schedule_frequency: $('#scheduleFrequency').val(),
-        schedule_time: $('#scheduleTime').val()
-    };
-    
-    // API'ye gönder
-    if (socket) {
-        socket.emit('save_area', {
-            area_id: selectedArea,
-            data: areaData
-        });
-    }
-    
-    $('#editAreaModal').modal('hide');
-    showNotification('✅ Alan ayarları kaydedildi', 'success');
-}
+    // Alan detaylarını göster
+    function showAreaDetails(areaData) {
+        const area_m2 = calculateAreaSize(areaData.boundary);
+        const estimatedTime = Math.round(area_m2 / 100); // 100 m²/dk varsayımı
 
-// Yeni alan oluşturma başlatma
-function startAreaCreation() {
-    setMapMode('create');
-    showNotification('🗺️ Harita üzerinde alan sınırlarını çizin', 'info');
-}
-
-// GPS içe aktarma
-function importFromGPS() {
-    // GPS koordinat içe aktarma modalı
-    alert('GPS koordinat içe aktarma özelliği yakında eklenecek!');
-}
-
-// Zamanlama seçeneklerini göster/gizle
-$('#enableSchedule').change(function() {
-    if ($(this).is(':checked')) {
-        $('#scheduleOptions').slideDown();
-    } else {
-        $('#scheduleOptions').slideUp();
-    }
-});
-
-// Harita tıklama olayları
-$('#area-map').click(function(e) {
-    if (currentMapMode === 'create') {
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        // Koordinat sistemi dönüşümü (pixel -> metre)
-        const realX = (x / rect.width) * 50; // 50m maksimum genişlik
-        const realY = (y / rect.height) * 30; // 30m maksimum yükseklik
-        
-        newAreaPoints.push({x: realX, y: realY, pixelX: x, pixelY: y});
-        
-        // Noktayı görsel olarak ekle
-        const point = $('<div class="area-point"></div>');
-        point.css({
-            left: x + 'px',
-            top: y + 'px',
-            background: '#ffc107'
-        });
-        $(this).append(point);
-        
-        if (newAreaPoints.length >= 3) {
-            // Alan oluşturma tamamlanabilir
-            const confirmCreate = confirm(`${newAreaPoints.length} nokta ile alan oluşturulsun mu?`);
-            if (confirmCreate) {
-                createNewArea();
-            }
+        // Eğer zaten varsa önceki modal'ı temizle
+        const existingModal = document.getElementById('areaDetailModal');
+        if (existingModal) {
+            existingModal.remove();
         }
-    }
-});
 
-// Yeni alan oluşturma
-function createNewArea() {
-    const areaName = prompt('Alan adı:', 'Yeni Alan');
-    if (areaName) {
-        // Koordinatları string formatına çevir
-        const coordString = newAreaPoints.map(p => 
-            `(${p.realX.toFixed(1)},${p.realY.toFixed(1)})`
-        ).join(', ');
-        
-        // Yeni alan kartını ekle
-        const newAreaCard = $(`
-            <div class="area-card" data-area-id="new-area-${Date.now()}">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h5>🆕 ${areaName}</h5>
-                        <p class="text-muted">Yeni tanımlanmış alan</p>
-                        <div class="area-stats">
-                            <small>
-                                <strong>Koordinatlar:</strong> ${coordString}<br>
-                                <strong>Durum:</strong> Henüz biçilmedi
-                            </small>
+        const modalHTML = `
+        <div class="modal fade" id="areaDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">📋 ${areaData.name} - Alan Detayları</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>📏 Alan Bilgileri</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Alan:</strong> ${area_m2.toFixed(1)} m²</li>
+                                    <li><strong>Nokta Sayısı:</strong> ${areaData.boundary.length}</li>
+                                    <li><strong>Desen:</strong> ${getPatternName(areaData.pattern)}</li>
+                                    <li><strong>Tahmini Süre:</strong> ${estimatedTime} dakika</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>⚙️ Biçme Ayarları</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Bıçak Yüksekliği:</strong> ${areaData.blade_height} cm</li>
+                                    <li><strong>Hız:</strong> ${areaData.speed} m/s</li>
+                                    <li><strong>Overlap:</strong> ${(areaData.overlap * 100).toFixed(0)}%</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6>📍 Koordinatlar</h6>
+                        <div style="max-height: 150px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Nokta</th>
+                                        <th>X (m)</th>
+                                        <th>Y (m)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${areaData.boundary.map((point, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${point.x.toFixed(2)}</td>
+                                            <td>${point.y.toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="col-md-4 text-right">
-                        <div class="btn-group-vertical">
-                            <button class="btn btn-success btn-sm">✂️ Biç</button>
-                            <button class="btn btn-primary btn-sm">✏️ Düzenle</button>
-                            <button class="btn btn-warning btn-sm">👁️ Göster</button>
-                            <button class="btn btn-danger btn-sm">🗑️ Sil</button>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" onclick="startMowing('${areaData.id}'); closeAreaDetailModal();">
+                            ✂️ Biçmeye Başla
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="editArea('${areaData.id}'); closeAreaDetailModal();">
+                            ✏️ Düzenle
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Kapat</button>
                     </div>
                 </div>
             </div>
-        `);
-        
-        $('#area-list').append(newAreaCard);
-        
-        // Haritada kalıcı alan olarak göster
-        drawAreaOnMap(newAreaPoints);
-        
-        // Temizle
-        newAreaPoints = [];
-        $('.area-point[style*="background: rgb(255, 193, 7)"]').remove();
-        setMapMode('view');
-        
-        showNotification('✅ Yeni alan oluşturuldu!', 'success');
+        </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = new bootstrap.Modal(document.getElementById('areaDetailModal'));
+        modal.show();
+
+        // Modal kapandığında temizle
+        document.getElementById('areaDetailModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+            document.querySelectorAll('.area-card').forEach(card => {
+                card.classList.remove('border-primary');
+            });
+        });
     }
-}
 
-// Haritada alan çizme
-function drawAreaOnMap(points) {
-    if (points.length < 3) return;
-    
-    // Minimum ve maksimum koordinatları bul
-    const minX = Math.min(...points.map(p => p.pixelX));
-    const minY = Math.min(...points.map(p => p.pixelY));
-    const maxX = Math.max(...points.map(p => p.pixelX));
-    const maxY = Math.max(...points.map(p => p.pixelY));
-    
-    const polygon = $('<div class="area-polygon"></div>');
-    polygon.css({
-        left: minX + 'px',
-        top: minY + 'px',
-        width: (maxX - minX) + 'px',
-        height: (maxY - minY) + 'px',
-        border: '2px solid #28a745',
-        background: 'rgba(40, 167, 69, 0.1)'
+    // Alan detay modalını kapat yardımcı fonksiyonu
+    function closeAreaDetailModal() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('areaDetailModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+
+    // Alan silme
+    function deleteArea(areaId) {
+        if (confirm('Bu alanı silmek istediğinizden emin misiniz?')) {
+            fetch(`/api/areas/${areaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Alan kartını kaldır
+                        $(`.area-card[data-area-id="${areaId}"]`).fadeOut(() => {
+                            $(this).remove();
+                        });
+                        showNotification('🗑️ Alan silindi', 'warning');
+                        // Sayfa istatistiklerini güncelle
+                        updateAreaStatistics();
+                    } else {
+                        showNotification(`❌ Alan silinemedi: ${data.error}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Alan silme hatası:', error);
+                    showNotification('❌ Bağlantı hatası', 'danger');
+                });
+        }
+    }
+
+    // Alan kaydetme
+    function saveArea() {
+        const areaName = document.getElementById('areaName').value.trim();
+        const coordinates = document.getElementById('areaCoordinates').value.trim();
+
+        if (!areaName) {
+            showNotification('❌ Alan adı gerekli', 'warning');
+            return;
+        }
+
+        if (!coordinates) {
+            showNotification('❌ Koordinatlar gerekli', 'warning');
+            return;
+        }
+
+        // Koordinatları parse et
+        let boundary;
+        try {
+            boundary = parseCoordinates(coordinates);
+        } catch (error) {
+            showNotification('❌ Geçersiz koordinat formatı', 'warning');
+            return;
+        }
+
+        const areaData = {
+            name: areaName,
+            blade_height: parseInt(document.getElementById('cuttingHeight').value),
+            speed: parseFloat(document.getElementById('mowingSpeed').value),
+            pattern: document.getElementById('mowingPattern').value,
+            boundary: boundary,
+            overlap: 0.1
+        };
+
+        // API'ye gönder
+        fetch(`/api/areas/${selectedArea}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(areaData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editAreaModal'));
+                    modal.hide();
+                    showNotification('✅ Alan ayarları kaydedildi', 'success');
+                    // Sayfa yenilenmeden alan kartını güncelle
+                    updateAreaCard(selectedArea, areaData);
+                } else {
+                    showNotification(`❌ Kaydetme hatası: ${data.error}`, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Alan kaydetme hatası:', error);
+                showNotification('❌ Bağlantı hatası', 'danger');
+            });
+    }
+
+    // Yeni alan oluşturma başlatma
+    function startAreaCreation() {
+        setMapMode('create');
+        showNotification('🗺️ Harita üzerinde alan sınırlarını çizin', 'info');
+    }
+
+    // GPS içe aktarma
+    function importFromGPS() {
+        // GPS koordinat içe aktarma modalını oluştur ve göster
+        const importModal = $(`
+        <div class="modal fade" id="gpsImportModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">📍 GPS Koordinatlarından İçe Aktar</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Alan Adı:</label>
+                            <input type="text" class="form-control" id="gpsAreaName" placeholder="Örn: GPS ile çizilen alan">
+                        </div>
+
+                        <div class="form-group">
+                            <label>GPS Koordinatları:</label>
+                            <textarea class="form-control" id="gpsCoordinates" rows="8"
+                                      placeholder="40.123456, 29.123456
+40.123500, 29.123500
+40.123600, 29.123400
+40.123400, 29.123300"></textarea>
+                            <small class="text-muted">
+                                Her satıra bir GPS koordinatı (enlem, boylam) yazın.<br>
+                                Format: 40.123456, 29.123456
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>💡 İpucu:</strong> GPS koordinatlarını Google Maps'ten kopyalayabilirsiniz.
+                            Haritada sağ tıklayın ve koordinatları kopyalayın.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">❌ İptal</button>
+                        <button type="button" class="btn btn-primary" onclick="processGPSImport()">
+                            📥 İçe Aktar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+        $('body').append(importModal);
+        const modal = new bootstrap.Modal(document.getElementById('gpsImportModal'));
+        modal.show();
+
+        // Modal kapandığında temizle
+        document.getElementById('gpsImportModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+    }
+
+    // Zamanlama seçeneklerini göster/gizle
+    const enableScheduleCheckbox = document.getElementById('enableSchedule');
+    if (enableScheduleCheckbox) {
+        enableScheduleCheckbox.addEventListener('change', function () {
+            const scheduleOptions = document.getElementById('scheduleOptions');
+            if (scheduleOptions) {
+                if (this.checked) {
+                    scheduleOptions.style.display = 'block';
+                } else {
+                    scheduleOptions.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Harita tıklama olayları
+    document.getElementById('area-map').addEventListener('click', function (e) {
+        if (currentMapMode === 'create') {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Koordinat sistemi dönüşümü (pixel -> metre)
+            const realX = (x / rect.width) * 50; // 50m maksimum genişlik
+            const realY = (y / rect.height) * 30; // 30m maksimum yükseklik
+
+            newAreaPoints.push({ x: realX, y: realY, pixelX: x, pixelY: y });
+
+            // Noktayı görsel olarak ekle
+            const point = document.createElement('div');
+            point.className = 'area-point';
+            point.style.left = x + 'px';
+            point.style.top = y + 'px';
+            point.style.background = '#ffc107';
+            this.appendChild(point);
+
+            if (newAreaPoints.length >= 3) {
+                // Alan oluşturma tamamlanabilir
+                const confirmCreate = confirm(`${newAreaPoints.length} nokta ile alan oluşturulsun mu?`);
+                if (confirmCreate) {
+                    createNewArea();
+                }
+            }
+        }
     });
-    
-    $('#area-map').append(polygon);
-}
 
-// Bildirim gösterme
-function showNotification(message, type = 'info') {
-    const alertClass = `alert-${type}`;
-    const notification = $(`
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" 
+    // Yeni alan oluşturma
+    function createNewArea() {
+        const areaName = prompt('Alan adı:', 'Yeni Alan');
+        if (!areaName) return;
+
+        if (newAreaPoints.length < 3) {
+            showNotification('❌ En az 3 nokta gerekli', 'warning');
+            return;
+        }
+
+        // Alan ID'si oluştur
+        const areaId = `area_${Date.now()}`;
+
+        // Koordinatları API formatına çevir
+        const boundary = newAreaPoints.map(p => ({
+            x: p.x,
+            y: p.y
+        }));
+
+        const newAreaData = {
+            id: areaId,
+            name: areaName,
+            boundary: boundary,
+            pattern: 'lawn_mower',
+            blade_height: 5,
+            speed: 0.5,
+            overlap: 0.1
+        };
+
+        // API'ye gönder
+        fetch('/api/areas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newAreaData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Başarılı oluşturma
+                    showNotification('✅ Yeni alan oluşturuldu!', 'success');
+
+                    // Sayfayı yenile veya yeni alan kartını dinamik ekle
+                    addNewAreaCard(areaId, newAreaData);
+
+                    // Temizle
+                    newAreaPoints = [];
+                    $('.area-point[style*="background: rgb(255, 193, 7)"]').remove();
+                    setMapMode('view');
+
+                    // İstatistikleri güncelle
+                    updateAreaStatistics();
+                } else {
+                    showNotification(`❌ Alan oluşturulamadı: ${data.error}`, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Alan oluşturma hatası:', error);
+                showNotification('❌ Bağlantı hatası', 'danger');
+            });
+    }
+
+    // Haritada alan çizme
+    function drawAreaOnMap(points) {
+        if (points.length < 3) return;
+
+        // Minimum ve maksimum koordinatları bul
+        const minX = Math.min(...points.map(p => p.pixelX));
+        const minY = Math.min(...points.map(p => p.pixelY));
+        const maxX = Math.max(...points.map(p => p.pixelX));
+        const maxY = Math.max(...points.map(p => p.pixelY));
+
+        const polygon = $('<div class="area-polygon"></div>');
+        polygon.css({
+            left: minX + 'px',
+            top: minY + 'px',
+            width: (maxX - minX) + 'px',
+            height: (maxY - minY) + 'px',
+            border: '2px solid #28a745',
+            background: 'rgba(40, 167, 69, 0.1)'
+        });
+
+        $('#area-map').append(polygon);
+    }
+
+    // Haritada alan poligonu çiz
+    function drawAreaPolygonOnMap(areaId, boundary) {
+        if (!boundary || boundary.length < 3) return;
+
+        // Alan sınırlarını hesapla
+        const minX = Math.min(...boundary.map(p => p.x));
+        const minY = Math.min(...boundary.map(p => p.y));
+        const maxX = Math.max(...boundary.map(p => p.x));
+        const maxY = Math.max(...boundary.map(p => p.y));
+
+        // Harita boyutlarına göre piksel koordinatlarına çevir
+        const map = document.getElementById('area-map');
+        const mapWidth = map.offsetWidth;
+        const mapHeight = map.offsetHeight;
+
+        // Koordinat dönüşümü: Gerçek koordinat -> Piksel
+        // X: 0-50m -> 0-mapWidth
+        // Y: 0-40m -> 0-mapHeight
+        const pixelMinX = (minX / 50) * mapWidth;
+        const pixelMinY = (minY / 40) * mapHeight;
+        const pixelMaxX = (maxX / 50) * mapWidth;
+        const pixelMaxY = (maxY / 40) * mapHeight;
+
+        // Poligon elementi oluştur
+        const polygon = document.createElement('div');
+        polygon.className = 'area-polygon';
+        polygon.setAttribute('data-area-id', areaId);
+        polygon.style.position = 'absolute';
+        polygon.style.left = pixelMinX + 'px';
+        polygon.style.top = pixelMinY + 'px';
+        polygon.style.width = (pixelMaxX - pixelMinX) + 'px';
+        polygon.style.height = (pixelMaxY - pixelMinY) + 'px';
+        polygon.style.border = '2px solid #007bff';
+        polygon.style.background = 'rgba(0, 123, 255, 0.1)';
+        polygon.style.borderRadius = '4px';
+        polygon.style.cursor = 'pointer';
+        polygon.title = `Alan: ${areaId}`;
+
+        // Haritaya ekle
+        map.appendChild(polygon);
+
+        // Tıklama eventi ekle
+        polygon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            showArea(areaId);
+        });
+    }
+
+    // Tüm alan poligonlarını temizle
+    function clearMapPolygons() {
+        const polygons = document.querySelectorAll('.area-polygon[data-area-id]');
+        polygons.forEach(polygon => polygon.remove());
+    }
+
+    // Bildirim gösterme
+    function showNotification(message, type = 'info') {
+        const alertClass = `alert-${type}`;
+        const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert"
              style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
             ${message}
             <button type="button" class="close" data-dismiss="alert">
@@ -565,18 +880,324 @@ function showNotification(message, type = 'info') {
             </button>
         </div>
     `);
-    
-    $('body').append(notification);
-    
-    // 5 saniye sonra otomatik kapat
-    setTimeout(() => {
-        notification.alert('close');
-    }, 5000);
-}
 
-// Sayfa yüklendiğinde
-$(document).ready(function() {
-    console.log('Alan yönetimi sayfası yüklendi');
-});
+        $('body').append(notification);
+
+        // 5 saniye sonra otomatik kapat
+        setTimeout(() => {
+            notification.alert('close');
+        }, 5000);
+    }
+
+    // Koordinat string'ini parse et
+    function parseCoordinates(coordString) {
+        const coords = [];
+        const matches = coordString.match(/\(([^)]+)\)/g);
+
+        if (!matches) {
+            throw new Error('Geçersiz koordinat formatı');
+        }
+
+        matches.forEach(match => {
+            const cleanMatch = match.replace(/[()]/g, '');
+            const [x, y] = cleanMatch.split(',').map(s => parseFloat(s.trim()));
+
+            if (isNaN(x) || isNaN(y)) {
+                throw new Error('Geçersiz koordinat değerleri');
+            }
+
+            coords.push({ x, y });
+        });
+
+        if (coords.length < 3) {
+            throw new Error('En az 3 koordinat gerekli');
+        }
+
+        return coords;
+    }
+
+    // Alan kartını güncelle
+    function updateAreaCard(areaId, areaData) {
+        const card = $(`.area-card[data-area-id="${areaId}"]`);
+        if (card.length) {
+            card.find('h5').text(`🌱 ${areaData.name}`);
+
+            const area_m2 = calculateAreaSize(areaData.boundary);
+            card.find('p.text-muted').text(`${area_m2.toFixed(0)} m² alan`);
+
+            // İstatistikleri güncelle
+            const stats = card.find('.area-stats small');
+            stats.html(`
+            <strong>Biçme Yüksekliği:</strong> ${areaData.blade_height} cm<br>
+            <strong>Hız:</strong> ${areaData.speed} m/s<br>
+            <strong>Desen:</strong> ${getPatternName(areaData.pattern)}
+        `);
+        }
+    }
+
+    // Yeni alan kartı ekle
+    function addNewAreaCard(areaId, areaData) {
+        const area_m2 = calculateAreaSize(areaData.boundary);
+
+        const newAreaCard = $(`
+        <div class="area-card" data-area-id="${areaId}">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5>🆕 ${areaData.name}</h5>
+                    <p class="text-muted">${area_m2.toFixed(0)} m² alan</p>
+                    <div class="area-stats">
+                        <small>
+                            <strong>Biçme Yüksekliği:</strong> ${areaData.blade_height} cm<br>
+                            <strong>Hız:</strong> ${areaData.speed} m/s<br>
+                            <strong>Desen:</strong> ${getPatternName(areaData.pattern)}<br>
+                            <strong>Durum:</strong> Henüz biçilmedi
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-right">
+                    <div class="btn-group-vertical">
+                        <button class="btn btn-success btn-sm" onclick="startMowing('${areaId}')">
+                            ✂️ Biç
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="editArea('${areaId}')">
+                            ✏️ Düzenle
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="showArea('${areaId}')">
+                            👁️ Göster
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteArea('${areaId}')">
+                            🗑️ Sil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+
+        document.getElementById('area-list').appendChild(newAreaCard[0]);
+
+        // Haritada poligon çiz
+        drawAreaPolygonOnMap(areaId, areaData.boundary);
+    }
+
+    // Alan durumunu güncelle
+    function updateAreaStatus(areaId, status) {
+        const card = $(`.area-card[data-area-id="${areaId}"]`);
+        if (card.length) {
+            const stats = card.find('.area-stats small');
+            const currentText = stats.html();
+            const updatedText = currentText.replace(
+                /<strong>Durum:<\/strong>[^<]*/,
+                `<strong>Durum:</strong> ${status}`
+            );
+            stats.html(updatedText);
+        }
+    }
+
+    // Alan boyutu hesapla (basit çokgen alan formülü)
+    function calculateAreaSize(boundary) {
+        if (boundary.length < 3) return 0;
+
+        let area = 0;
+        for (let i = 0; i < boundary.length; i++) {
+            const j = (i + 1) % boundary.length;
+            area += boundary[i].x * boundary[j].y;
+            area -= boundary[j].x * boundary[i].y;
+        }
+        return Math.abs(area) / 2;
+    }
+
+    // Desen adını getir
+    function getPatternName(pattern) {
+        const patterns = {
+            'lawn_mower': 'Biçerdöver (Paralel)',
+            'spiral': 'Spiral',
+            'random': 'Rastgele',
+            'perimeter_first': 'Önce Çevre'
+        };
+        return patterns[pattern] || pattern;
+    }
+
+    // Alan istatistiklerini güncelle
+    function updateAreaStatistics() {
+        fetch('/api/areas')
+            .then(response => response.json())
+            .then(data => {
+                const areas = Object.values(data);
+                let totalArea = 0;
+                let totalTime = 0;
+
+                areas.forEach(area => {
+                    const area_m2 = calculateAreaSize(area.boundary);
+                    totalArea += area_m2;
+                    // Basit süre hesaplaması: 1 m² = 1 dakika (yaklaşık)
+                    totalTime += area_m2 / 60; // saat
+                });
+
+                // İstatistik kartlarını güncelle
+                $('.col-6:contains("Tanımlı Alan") h4').text(areas.length);
+                $('.col-6:contains("Toplam Alan") h4').text(`${totalArea.toFixed(0)} m²`);
+                $('.col-6:contains("Toplam Süre") h4').text(`${Math.round(totalTime * 60)} dk`);
+            })
+            .catch(error => {
+                console.error('İstatistik güncelleme hatası:', error);
+            });
+    }
+
+    // Sayfa yüklendiğinde
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Alan yönetimi sayfası yüklendi');
+
+        // Alanları yükle
+        loadAreas();
+
+        // Zamanlama checkbox event'i - bu yukarda zaten tanımlandı
+    });
+
+    // Alanları yükle
+    function loadAreas() {
+        fetch('/api/areas')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Alan yükleme hatası:', data.error);
+                    showNotification('❌ Alanlar yüklenemedi', 'danger');
+                    return;
+                }
+
+                // Mevcut alan kartlarını ve harita poligonlarını temizle
+                document.querySelectorAll('.area-card').forEach(card => card.remove());
+                clearMapPolygons();
+
+                // Her alanı kartlara dönüştür (harita poligonları da çizilecek)
+                Object.entries(data).forEach(([areaId, areaData]) => {
+                    addNewAreaCard(areaId, areaData);
+                });
+
+                // İstatistikleri güncelle
+                updateAreaStatistics();
+            })
+            .catch(error => {
+                console.error('Alan yükleme hatası:', error);
+                showNotification('⚠️ Alan bilgileri yüklenirken sorun oluştu', 'warning');
+            });
+    }
+
+    // GPS import işlemi
+    function processGPSImport() {
+        const areaName = $('#gpsAreaName').val().trim();
+        const gpsCoords = $('#gpsCoordinates').val().trim();
+
+        if (!areaName) {
+            showNotification('❌ Alan adı gerekli', 'warning');
+            return;
+        }
+
+        if (!gpsCoords) {
+            showNotification('❌ GPS koordinatları gerekli', 'warning');
+            return;
+        }
+
+        try {
+            // GPS koordinatlarını parse et
+            const lines = gpsCoords.split('\n');
+            const boundary = [];
+
+            lines.forEach((line, index) => {
+                const cleanLine = line.trim();
+                if (!cleanLine) return;
+
+                const coords = cleanLine.split(',');
+                if (coords.length !== 2) {
+                    throw new Error(`Satır ${index + 1}: Geçersiz koordinat formatı`);
+                }
+
+                const lat = parseFloat(coords[0].trim());
+                const lon = parseFloat(coords[1].trim());
+
+                if (isNaN(lat) || isNaN(lon)) {
+                    throw new Error(`Satır ${index + 1}: Geçersiz koordinat değerleri`);
+                }
+
+                // GPS koordinatlarını lokal koordinat sistemine çevir
+                // Bu basit bir dönüşüm - gerçek projede daha sofistike olabilir
+                const localX = (lon - 29.0) * 111320 * Math.cos(lat * Math.PI / 180) / 1000; // km cinsinden
+                const localY = (lat - 40.0) * 110540 / 1000; // km cinsinden
+
+                boundary.push({ x: localX, y: localY });
+            });
+
+            if (boundary.length < 3) {
+                throw new Error('En az 3 koordinat gerekli');
+            }
+
+            // Yeni alan oluştur
+            const areaId = `gps_area_${Date.now()}`;
+            const newAreaData = {
+                id: areaId,
+                name: areaName,
+                boundary: boundary,
+                pattern: 'lawn_mower',
+                blade_height: 5,
+                speed: 0.4,
+                overlap: 0.1
+            };
+
+            // API'ye gönder
+            fetch('/api/areas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newAreaData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('gpsImportModal'));
+                        modal.hide();
+                        showNotification('✅ GPS koordinatlarından alan oluşturuldu!', 'success');
+
+                        // Yeni alan kartını ekle
+                        addNewAreaCard(areaId, newAreaData);
+                        updateAreaStatistics();
+                    } else {
+                        showNotification(`❌ GPS alan oluşturulamadı: ${data.error}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('GPS alan oluşturma hatası:', error);
+                    showNotification('❌ Bağlantı hatası', 'danger');
+                });
+
+        } catch (error) {
+            showNotification(`❌ GPS koordinat hatası: ${error.message}`, 'danger');
+        }
+    }
+
+    // Biçme durdurma fonksiyonu
+    function stopMowing(areaId) {
+        if (confirm(`${areaId} alanındaki biçme işlemini durdurmak istiyor musunuz?`)) {
+            fetch(`/api/areas/${areaId}/stop`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('⏹️ Biçme işlemi durduruldu!', 'warning');
+                        updateAreaStatus(areaId, 'Durduruldu');
+                    } else {
+                        showNotification(`❌ Biçme durdurulamadı: ${data.error}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Biçme durdurma hatası:', error);
+                    showNotification('❌ Bağlantı hatası', 'danger');
+                });
+        }
+    }
 </script>
 {% endblock %}
