@@ -2,6 +2,9 @@
 numpy>=1.21.0
 scipy>=1.7.0
 
+# GPS/Navigation
+utm>=0.7.0
+
 # Web Framework
 Flask>=2.0.0
 Flask-SocketIO>=5.0.0
@@ -12,6 +15,8 @@ RPi.GPIO>=0.7.1
 pigpio>=1.78
 adafruit-circuitpython-ads1x15>=2.2.0
 adafruit-circuitpython-bno055>=5.4.0
+adafruit-circuitpython-dht>=3.7.0
+adafruit-blinka>=8.0.0
 
 # Computer Vision
 opencv-python>=4.5.0

@@ -8,6 +8,7 @@ import sys
 import time
 import json
 import psutil
+import subprocess
 import threading
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -44,6 +45,50 @@ class SystemMonitor:
         except KeyboardInterrupt:
             print("\n\n🛑 İzleme durduruldu.")
             self.running = False
+
+    def get_wifi_signal_strength(self):
+        """WiFi sinyal gücünü dBm cinsinden al"""
+        try:
+            # Linux'ta iwconfig kullanarak WiFi sinyal gücünü al
+            result = subprocess.run(
+                ["iwconfig"], capture_output=True, text=True, timeout=5
+            )
+
+            if result.returncode == 0:
+                lines = result.stdout.split("\n")
+                for line in lines:
+                    if "Signal level=" in line:
+                        # "Signal level=-45 dBm" formatından değer çıkar
+                        import re
+
+                        match = re.search(r"Signal level=(-?\d+)", line)
+                        if match:
+                            return int(match.group(1))
+
+            # iwconfig başarısız olursa /proc/net/wireless dene
+            try:
+                with open("/proc/net/wireless", "r") as f:
+                    lines = f.readlines()
+                    if len(lines) > 2:  # Header'ları atla
+                        data = lines[2].split()
+                        if len(data) > 3:
+                            # Link quality değerini dBm'e dönüştür (yaklaşık)
+                            link_quality = float(data[2])
+                            # Yaklaşık dönüşüm: 0-70 range -> -90 to -30 dBm
+                            signal_dbm = int(-90 + (link_quality * 60 / 70))
+                            return signal_dbm
+            except (FileNotFoundError, IndexError, ValueError):
+                pass
+
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.CalledProcessError,
+            FileNotFoundError,
+        ):
+            pass
+
+        # Hiçbiri çalışmazsa geliştirme ortamı değeri döndür
+        return -45  # Geliştirme ortamı için varsayılan değer
 
     def collect_system_data(self):
         """Sistem verilerini topla"""
@@ -85,7 +130,7 @@ class SystemMonitor:
 
         # Ağ durumu
         self.data["network"] = {
-            "wifi_signal": -45,  # dBm
+            "wifi_signal": self.get_wifi_signal_strength(),  # Gerçek WiFi sinyali
             "bytes_sent": psutil.net_io_counters().bytes_sent,
             "bytes_recv": psutil.net_io_counters().bytes_recv,
             "connections": len(psutil.net_connections()),

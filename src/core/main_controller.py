@@ -45,6 +45,12 @@ class MainController:
         self.docking_controller = None
         self.motor_controller = None
         self.obstacle_avoidance = None  # YENİ: Engel kaçınma modülü
+        self.sensor_manager = None  # YENİ: Sensör yönetimi
+
+        # Navigation loop için
+        self.navigation_thread = None
+        self.navigation_running = False
+        self.last_gps_update = 0
 
         # İstatistikler
         self.stats = {
@@ -98,6 +104,15 @@ class MainController:
         # Bu sadece logger referansı alır
         self.logger = logging.getLogger("OBA_MainController")
 
+        # Sensör manager'ı başlat
+        try:
+            from src.hardware.sensor_manager import get_sensor_manager
+
+            self.sensor_manager = get_sensor_manager()
+            self.logger.info("Sensör manager başlatıldı")
+        except Exception as e:
+            self.logger.warning("Sensör manager başlatma hatası: %s", e)
+
     def initialize_modules(self):
         """Diğer modülleri başlat"""
         try:
@@ -114,6 +129,12 @@ class MainController:
             self.power_manager = PowerManager(simulate=self.simulate)
             self.docking_controller = DockingController(simulate=self.simulate)
             self.motor_controller = MotorController(simulate=self.simulate)
+
+            # GPS koordinat sistemi kurulumu
+            self._setup_gps_coordinate_system()
+
+            # Navigation thread'i başlat
+            self._start_navigation_loop()
 
             self.logger.info("Tüm modüller başarıyla başlatıldı")
 
@@ -138,6 +159,7 @@ class MainController:
     def stop(self):
         """Robotu durdur"""
         self.running = False
+        self._stop_navigation_loop()
         self.logger.info("Robot durduruluyor...")
 
     def emergency_stop_triggered(self):
@@ -352,6 +374,79 @@ class MainController:
             "mowing_time": self.stats["mowing_time"],
             "charging_cycles": self.stats["charging_cycles"],
         }
+
+    def _setup_gps_coordinate_system(self):
+        """GPS koordinat sistemi kurulumu"""
+        try:
+            # Sensor manager'dan GPS verisi al
+            if self.sensor_manager:
+                nav_data = self.sensor_manager.get_navigation_data()
+                gps_data = nav_data.get("gps")
+
+                if gps_data and gps_data.get("fix"):
+                    # GPS fix varsa orjin olarak ayarla
+                    self.path_planner.set_gps_origin(
+                        gps_data["latitude"], gps_data["longitude"]
+                    )
+                    self.logger.info("GPS koordinat sistemi kuruldu")
+                else:
+                    # GPS fix yoksa varsayılan orjin (Ankara yakını)
+                    self.path_planner.set_gps_origin(39.9334, 32.8597)
+                    self.logger.warning("GPS fix yok, varsayılan orjin kullanılıyor")
+            else:
+                # Sensor manager yoksa varsayılan
+                self.logger.warning("Sensor manager yok, GPS kurulumu atlandı")
+
+        except Exception as e:
+            self.logger.error(f"GPS kurulum hatası: {e}")
+
+    def _start_navigation_loop(self):
+        """Navigation thread'ini başlat"""
+        if not self.navigation_running:
+            self.navigation_running = True
+            self.navigation_thread = threading.Thread(
+                target=self._navigation_loop, daemon=True
+            )
+            self.navigation_thread.start()
+            self.logger.info("Navigation loop başlatıldı")
+
+    def _navigation_loop(self):
+        """Profesyonel navigasyon döngüsü"""
+        while self.navigation_running and self.running:
+            try:
+                if self.sensor_manager and self.path_planner:
+                    # Sensor fusion verilerini al
+                    nav_data = self.sensor_manager.get_navigation_data()
+
+                    # Path planner'ı güncelle
+                    self.path_planner.update_position_from_sensors(nav_data)
+
+                    # İstatistik güncelle
+                    fusion = nav_data.get("fusion", {})
+                    position = fusion.get("position", {})
+
+                    if position:
+                        self.stats["current_position"] = {
+                            "x": position.get("x", 0),
+                            "y": position.get("y", 0),
+                            "heading": fusion.get("orientation", {}).get("yaw", 0),
+                        }
+
+                    self.last_gps_update = time.time()
+
+                # 100ms'de bir güncelle
+                time.sleep(0.1)
+
+            except Exception as e:
+                self.logger.error(f"Navigation loop hatası: {e}")
+                time.sleep(1.0)
+
+    def _stop_navigation_loop(self):
+        """Navigation thread'ini durdur"""
+        self.navigation_running = False
+        if self.navigation_thread:
+            self.navigation_thread.join(timeout=2.0)
+            self.logger.info("Navigation loop durduruldu")
 
 
 if __name__ == "__main__":

@@ -1,11 +1,14 @@
 """
 Rota Planlama Modülü
 Alan verilerine göre biçerdöver rotası oluşturur
+GPS entegrasyonu ile profesyonel navigasyon
 """
 
 import json
 import math
 import logging
+import time
+import utm
 from typing import List, Dict, Tuple, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
@@ -61,7 +64,7 @@ class Area:
 
 
 class PathPlanner:
-    """Rota planlama sınıfı"""
+    """Rota planlama sınıfı - GPS+IMU+Odometry entegrasyonu ile"""
 
     def __init__(self, config_path: str = "config/areas.json"):
         self.logger = logging.getLogger("PathPlanner")
@@ -80,7 +83,134 @@ class PathPlanner:
         self.safety_margin = 0.2  # Güvenlik mesafesi
         self.max_line_length = 50  # Maksimum çizgi uzunluğu
 
+        # GPS koordinat sistemi
+        self.gps_origin = None  # GPS koordinat sistemi orjini
+        self.utm_zone = None  # UTM zone bilgisi
+        self.current_gps_position = None
+        self.current_local_position = Point(0, 0)
+
+        # Sensor fusion için
+        self.last_sensor_update = time.time()
+        self.position_confidence = 0.0
+
         self._load_areas()
+
+    def set_gps_origin(self, latitude: float, longitude: float):
+        """GPS koordinat sistemi orjinini ayarla"""
+        try:
+            # GPS koordinatını UTM'e çevir
+            utm_x, utm_y, zone_number, zone_letter = utm.from_latlon(
+                latitude, longitude
+            )
+
+            self.gps_origin = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "utm_x": utm_x,
+                "utm_y": utm_y,
+                "zone": f"{zone_number}{zone_letter}",
+            }
+            self.utm_zone = (zone_number, zone_letter)
+
+            self.logger.info(f"GPS orjin ayarlandı: {latitude:.6f}, {longitude:.6f}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"GPS orjin ayarlama hatası: {e}")
+            return False
+
+    def update_position_from_sensors(self, navigation_data: Dict[str, Any]):
+        """Sensor fusion ile pozisyon güncelle"""
+        try:
+            current_time = time.time()
+            confidence_total = 0.0
+            weight_sum = 0.0
+
+            # GPS pozisyonu
+            if navigation_data.get("gps") and navigation_data["gps"].get("fix"):
+                gps = navigation_data["gps"]
+                local_pos = self.gps_to_local(gps["latitude"], gps["longitude"])
+                if local_pos:
+                    gps_weight = gps.get("quality", 0.5)
+                    self.current_local_position.x = local_pos.x
+                    self.current_local_position.y = local_pos.y
+                    confidence_total += gps_weight
+                    weight_sum += gps_weight
+
+                    self.current_gps_position = {
+                        "lat": gps["latitude"],
+                        "lon": gps["longitude"],
+                        "timestamp": current_time,
+                    }
+
+            # Odometry ile pozisyon düzeltmesi
+            if navigation_data.get("odometry"):
+                odom = navigation_data["odometry"]
+                odom_weight = odom.get("quality", 0.3)
+                # Odometry verisi zaten local koordinatlarda
+                confidence_total += odom_weight
+                weight_sum += odom_weight
+
+            # Toplam confidence hesapla
+            if weight_sum > 0:
+                self.position_confidence = confidence_total / weight_sum
+            else:
+                self.position_confidence = 0.0
+
+            self.last_sensor_update = current_time
+
+            self.logger.debug(
+                f"Pozisyon güncellendi: "
+                f"({self.current_local_position.x:.2f}, "
+                f"{self.current_local_position.y:.2f}), "
+                f"güven: {self.position_confidence:.2f}"
+            )
+
+        except Exception as e:
+            self.logger.error(f"Sensor fusion hatası: {e}")
+
+    def gps_to_local(self, latitude: float, longitude: float) -> Optional[Point]:
+        """GPS koordinatını local koordinata çevir"""
+        if not self.gps_origin:
+            self.logger.warning("GPS orjin ayarlanmamış")
+            return None
+
+        try:
+            # GPS'i UTM'e çevir
+            utm_x, utm_y, zone_number, zone_letter = utm.from_latlon(
+                latitude, longitude
+            )
+
+            # Orjine göre relative pozisyon hesapla
+            local_x = utm_x - self.gps_origin["utm_x"]
+            local_y = utm_y - self.gps_origin["utm_y"]
+
+            return Point(local_x, local_y)
+
+        except Exception as e:
+            self.logger.error(f"GPS-local dönüşüm hatası: {e}")
+            return None
+
+    def local_to_gps(self, point: Point) -> Optional[Dict[str, float]]:
+        """Local koordinatı GPS koordinatına çevir"""
+        if not self.gps_origin:
+            return None
+
+        try:
+            # Local koordinatı UTM'e çevir
+            utm_x = self.gps_origin["utm_x"] + point.x
+            utm_y = self.gps_origin["utm_y"] + point.y
+
+            # UTM'i GPS'e çevir
+            latitude, longitude = utm.to_latlon(
+                utm_x, utm_y, self.utm_zone[0], self.utm_zone[1]
+            )
+
+            return {"latitude": latitude, "longitude": longitude}
+
+        except Exception as e:
+            self.logger.error(f"Local-GPS dönüşüm hatası: {e}")
+            return None
 
     def _load_areas(self):
         """Alan tanımlarını yükle"""

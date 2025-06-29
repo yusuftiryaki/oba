@@ -1,0 +1,26 @@
+[Unit]
+Description=OBA Robot DHT22 Sıcaklık/Nem Sensörü
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/oba-robot
+Environment=PYTHONPATH=/home/pi/oba-robot
+ExecStart=/usr/bin/python3 -m src.hardware.dht22_sensor
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Güvenlik ayarları
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+# GPIO erişimi için gerekli
+SupplementaryGroups=gpio i2c spi
+
+[Install]
+WantedBy=multi-user.target

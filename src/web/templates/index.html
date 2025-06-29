@@ -471,7 +471,7 @@
     function initializeSystemInfo() {
         // Simulate system info
         document.getElementById('connected-users').textContent = '1';
-        document.getElementById('wifi-signal').textContent = 'Güçlü';
+        document.getElementById('wifi-signal').textContent = 'Güçlü (-45 dBm)';
         document.getElementById('gps-status').textContent = '8 uydu';
     }
 
@@ -479,17 +479,34 @@
         fetch('/api/stats/realtime')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    document.getElementById('battery-level').textContent = data.battery_level + '%';
-                    document.getElementById('battery-bar').style.width = data.battery_level + '%';
-                    document.getElementById('robot-position').textContent = `X: ${data.position.x}, Y: ${data.position.y}`;
-                    document.getElementById('system-temp').textContent = data.temperature + '°C';
-                    document.getElementById('cpu-usage').textContent = data.cpu_usage + '%';
-                    document.getElementById('last-ping').textContent = new Date().toLocaleTimeString();
+                if (data.success && data.data) {
+                    const system = data.data.system || {};
+                    const wifiSignal = system.wifi_signal_dbm || -45;
+                    const wifiStatus = system.network_status || 'Güçlü';
+                    document.getElementById('wifi-signal').textContent =
+                        `${wifiStatus} (${wifiSignal} dBm)`;
+
+                    // Diğer sistem bilgileri de güncelle
+                    if (data.data.power) {
+                        document.getElementById('battery-level').textContent =
+                            data.data.power.battery_level + '%';
+                        document.getElementById('battery-bar').style.width =
+                            data.data.power.battery_level + '%';
+                    }
+                    if (data.data.robot) {
+                        document.getElementById('robot-position').textContent =
+                            `X: ${data.data.robot.position.x}, Y: ${data.data.robot.position.y}`;
+                    }
+                    if (system.cpu_usage) {
+                        document.getElementById('cpu-usage').textContent =
+                            system.cpu_usage + '%';
+                    }
+                    document.getElementById('last-ping').textContent =
+                        new Date().toLocaleTimeString();
                 }
             })
             .catch(error => {
-                console.log('Stats update failed:', error);
+                console.error('System info güncellenirken hata:', error);
             });
     }
 

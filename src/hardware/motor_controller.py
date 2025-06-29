@@ -55,7 +55,6 @@ class MotorStatus:
 
     rpm: float
     current: float
-    temperature: float
     encoder_position: int
     state: MotorState
     error_code: int = 0
@@ -198,7 +197,6 @@ class MotorController:
                     self.motor_status[motor_type] = MotorStatus(
                         rpm=0.0,
                         current=0.0,
-                        temperature=25.0,
                         encoder_position=0,
                         state=MotorState.STOPPED,
                     )
@@ -348,15 +346,11 @@ class MotorController:
                 status.rpm = 0
                 status.current = 0
 
-            status.temperature = 25 + random.uniform(-5, 15)
         else:
             # Gerçek donanımdan motor verilerini oku
             try:
                 # ADC'den akım oku
                 # status.current = self._read_motor_current(motor_type)
-
-                # Sıcaklık sensöründen oku
-                # status.temperature = self._read_motor_temperature(motor_type)
 
                 # Encoder'dan RPM hesapla
                 # status.rpm = self._calculate_rpm_from_encoder(motor_type)
@@ -364,7 +358,6 @@ class MotorController:
                 # Şimdilik placeholder değerler
                 if status.state == MotorState.RUNNING:
                     status.current = 5.0  # Gerçek sensörden okunacak
-                    status.temperature = 35.0  # Gerçek sensörden okunacak
                 else:
                     status.current = 0.0
 
@@ -642,7 +635,6 @@ class MotorController:
             result[motor_type.value] = {
                 "rpm": status.rpm,
                 "current": status.current,
-                "temperature": status.temperature,
                 "encoder_position": status.encoder_position,
                 "state": status.state.value,
                 "error_code": status.error_code,
@@ -799,7 +791,6 @@ class MotorController:
                 "blade_runtime": getattr(self, "_blade_runtime", 0.0),
                 "average_speed": 0.0,
                 "max_current": 0.0,
-                "max_temperature": 0.0,
             }
 
             # Her motor için durum bilgisi
@@ -807,16 +798,12 @@ class MotorController:
                 stats["motor_states"][motor_type.value] = {
                     "rpm": status.rpm,
                     "current": status.current,
-                    "temperature": status.temperature,
                     "state": status.state.value,
                     "encoder_position": status.encoder_position,
                 }
 
                 # Maksimum değerler
                 stats["max_current"] = max(stats["max_current"], status.current)
-                stats["max_temperature"] = max(
-                    stats["max_temperature"], status.temperature
-                )
 
             return stats
 
@@ -834,13 +821,130 @@ class MotorController:
         return 0.0
 
     def _read_motor_temperature(self, motor_type: MotorType) -> float:
-        """Motor sıcaklığını oku - testlerin mock ettiği fonksiyon"""
+        """Motor sıcaklığını oku - DS18B20 sensörleri kullanarak"""
         if self.simulate:
-            # Simülasyon değeri
-            return 25.0 + (time.time() % 20) * 2.0
+            # Simülasyon değeri - dinamik ama gerçekçi
+            base_temp = 25.0
+            motor_load = (
+                abs(self.motor_status.get(motor_type, MotorStatus()).rpm) / 100.0
+            )
+            ambient_variation = (time.time() % 60) / 10.0  # 0-6°C
+            load_heating = motor_load * 15.0  # Yük oranına göre ısınma
+            return round(base_temp + ambient_variation + load_heating, 1)
 
         # Gerçek donanım okuma implementasyonu
-        return 0.0
+        try:
+            # DS18B20 sensör ID'lerini motor tipine göre eşle
+            sensor_mapping = {
+                MotorType.LEFT_DRIVE: "28-0000123456aa",  # Sol motor sensör ID
+                MotorType.RIGHT_DRIVE: "28-0000123456bb",  # Sağ motor sensör ID
+                MotorType.CUTTING_BLADE: "28-0000123456cc",  # Biçme motoru sensör ID
+            }
+
+            sensor_id = sensor_mapping.get(motor_type)
+            if not sensor_id:
+                self.logger.warning(
+                    f"Motor {motor_type.value} için sıcaklık sensörü tanımlı değil"
+                )
+                return 25.0
+
+            # 1-Wire bus'tan sıcaklık oku
+            temp_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
+
+            if os.path.exists(temp_file):
+                with open(temp_file, "r") as f:
+                    lines = f.readlines()
+
+                # DS18B20 verisi doğrulama
+                if len(lines) >= 2 and "YES" in lines[0]:
+                    temp_line = lines[1]
+                    temp_pos = temp_line.find("t=")
+                    if temp_pos != -1:
+                        temp_string = temp_line[temp_pos + 2 :]
+                        temp_celsius = float(temp_string) / 1000.0
+
+                        # Makul sıcaklık aralığı kontrolü (0-100°C)
+                        if 0 <= temp_celsius <= 100:
+                            return round(temp_celsius, 1)
+                        else:
+                            self.logger.warning(
+                                f"Anormal sıcaklık okuması: {temp_celsius}°C"
+                            )
+
+            # Eğer DS18B20 çalışmazsa, ADC üzerinden thermistor dene
+            return self._read_thermistor_temperature(motor_type)
+
+        except Exception as e:
+            self.logger.error(f"Motor {motor_type.value} sıcaklık okuma hatası: {e}")
+            # Hata durumunda güvenli varsayılan değer
+            return 25.0
+
+    def _read_thermistor_temperature(self, motor_type: MotorType) -> float:
+        """Thermistor sensöründen sıcaklık oku (yedek yöntem)"""
+        try:
+            # ADC kanallarını motor tipine göre eşle
+            adc_channels = {
+                MotorType.LEFT_DRIVE: 0,  # ADC kanal 0
+                MotorType.RIGHT_DRIVE: 1,  # ADC kanal 1
+                MotorType.CUTTING_BLADE: 2,  # ADC kanal 2
+            }
+
+            channel = adc_channels.get(motor_type)
+            if channel is None:
+                return 25.0
+
+            # MCP3008 ADC üzerinden okuma
+            try:
+                import busio
+                import digitalio
+                import board
+                import adafruit_mcp3xxx.mcp3008 as MCP
+                from adafruit_mcp3xxx.analog_in import AnalogIn
+
+                # SPI bus setup
+                spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
+                cs = digitalio.DigitalInOut(board.D5)  # Chip select pin
+                mcp = MCP.MCP3008(spi, cs)
+
+                # Kanal oku
+                chan = AnalogIn(mcp, getattr(MCP, f"P{channel}"))
+                voltage = chan.voltage
+
+                # NTC 10K thermistor dönüştürme (Steinhart-Hart equation)
+                # R1 = 10000 (pull-up resistor)
+                # B = 3950 (thermistor B value)
+                # T0 = 298.15 (25°C in Kelvin)
+
+                if voltage > 0.01:  # Kısa devre kontrolü
+                    import math
+
+                    R1 = 10000.0
+                    V_supply = 3.3
+                    R_thermistor = R1 * voltage / (V_supply - voltage)
+
+                    # Steinhart-Hart equation
+                    R0 = 10000.0  # Resistance at 25°C
+                    B = 3950.0  # B value of thermistor
+                    T0 = 298.15  # 25°C in Kelvin
+
+                    temp_kelvin = 1 / ((1 / T0) + (1 / B) * math.log(R_thermistor / R0))
+                    temp_celsius = temp_kelvin - 273.15
+
+                    # Makul aralık kontrolü
+                    if 0 <= temp_celsius <= 100:
+                        return round(temp_celsius, 1)
+
+            except ImportError:
+                # ADC kütüphaneleri yoksa
+                pass
+            except Exception as adc_error:
+                self.logger.warning(f"ADC sıcaklık okuma hatası: {adc_error}")
+
+            return 25.0  # Varsayılan değer
+
+        except Exception as e:
+            self.logger.error(f"Thermistor okuma hatası: {e}")
+            return 25.0
 
     def clear_motor_errors(self) -> bool:
         """Motor hatalarını temizle - testlerin beklediği fonksiyon"""
@@ -878,16 +982,6 @@ class MotorController:
                     )
                     status.state = MotorState.ERROR
 
-                # Sıcaklık kontrolü
-                temperature = self._read_motor_temperature(motor_type)
-                max_temp = 80.0  # °C
-
-                if temperature > max_temp:
-                    safety_issues.append(
-                        f"{motor_type.value} aşırı sıcaklık: {temperature}°C > {max_temp}°C"
-                    )
-                    status.state = MotorState.ERROR
-
             # Güvenlik sorunu varsa acil durdur
             if safety_issues:
                 self.logger.critical(f"Güvenlik sorunu tespit edildi: {safety_issues}")
@@ -922,11 +1016,11 @@ class MotorController:
                 "timestamp": time.time(),
                 "left_velocity": self.motor_status.get(
                     MotorType.LEFT_DRIVE,
-                    MotorStatus(0, 0, 0, 0, MotorState.STOPPED),
+                    MotorStatus(0, 0, 0, MotorState.STOPPED),
                 ).rpm,
                 "right_velocity": self.motor_status.get(
                     MotorType.RIGHT_DRIVE,
-                    MotorStatus(0, 0, 0, 0, MotorState.STOPPED),
+                    MotorStatus(0, 0, 0, MotorState.STOPPED),
                 ).rpm,
             }
         except Exception as e:

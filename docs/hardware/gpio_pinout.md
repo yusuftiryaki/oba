@@ -8,7 +8,7 @@
 |----------|-----------|----------|----------|---------|
 | GPIO 2 | 3 | I2C SDA | BNO055 IMU | Pull-up dahili |
 | GPIO 3 | 5 | I2C SCL | BNO055 IMU | Pull-up dahili |
-| GPIO 4 | 7 | Genel IO | Yedek | - |
+| GPIO 4 | 7 | Genel IO | DHT22 Sıcaklık/Nem | 1-Wire protokol |
 | GPIO 6 | 31 | PWM | Biçme Motor PWM | Hardware PWM |
 | GPIO 7 | 26 | Genel IO | Biçme Motor Dir | Yön kontrolü |
 | GPIO 8 | 24 | SPI CE0 | LiDAR SPI | SPI interface |
@@ -105,6 +105,11 @@ Sağ Enkoder ───┬─── VCC ──── 5V (Pin 4)
                ├─── GND ──── GND (Pin 14)
                ├─── A ────── GPIO 20 (Pin 38)
                └─── B ────── GPIO 21 (Pin 40)
+
+DHT22 Sensör ──┬─── VCC ──── 3.3V (Pin 1)
+               ├─── GND ──── GND (Pin 6)
+               ├─── DATA ─── GPIO 4 (Pin 7)
+               └─── NC ────── Kullanılmıyor
 
 IR Sol ────────┬─── VCC ──── 3.3V (Pin 17)
                ├─── GND ──── GND (Pin 20)

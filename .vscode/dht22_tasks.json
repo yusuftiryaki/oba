@@ -1,0 +1,80 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Test DHT22 Hardware",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "src.hardware.dht22_sensor"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Setup DHT22 Hardware",
+            "type": "shell",
+            "command": "./scripts/setup_dht22_hardware.sh",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Monitor DHT22 Readings",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "tests/test_dht22.py"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "isBackground": false,
+            "problemMatcher": []
+        },
+        {
+            "label": "DHT22 Success Report",
+            "type": "shell",
+            "command": "echo",
+            "args": [
+                "🎉 DHT22 Test Başarılı! Gerçek donanım için hazır. Detaylar: docs/hardware/DHT22_TEST_SUCCESS.md"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

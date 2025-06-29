@@ -62,8 +62,15 @@
 | Parça | Spesifikasyon | Miktar | Tahmini Fiyat |
 |-------|--------------|--------|---------------|
 | **IMU Sensor** | BNO055, 9-DOF, I2C | 1 adet | ₺450 |
+| **GPS Modül** | u-blox NEO-8M, UART, 10Hz | 1 adet | ₺280 |
+| **GPS Anteni** | Passive ceramic, SMA | 1 adet | ₺85 |
 | **LiDAR Scanner** | RPLiDAR A1M8, 360°, 8m range | 1 adet | ₺3,200 |
 | **IR Mesafe Sensörü** | Sharp GP2Y0A21, 10-80cm | 2 adet | ₺280 |
+
+### Çevresel Sensörler
+| Parça | Spesifikasyon | Miktar | Tahmini Fiyat |
+|-------|--------------|--------|---------------|
+| **Sıcaklık/Nem Sensörü** | DHT22, -40°C~80°C, 0-100% RH | 1 adet | ₺120 |
 
 ### Güvenlik Sensörleri
 | Parça | Spesifikasyon | Miktar | Tahmini Fiyat |
@@ -156,13 +163,13 @@
 | **🖥️ Bilgisayar** | ₺3,805 |
 | **⚙️ Motor Sistemi** | ₺10,050 |
 | **🔋 Güç Sistemi** | ₺7,850 |
-| **👁️ Sensörler** | ₺4,245 |
+| **👁️ Sensörler** | ₺4,365 |
 | **🔧 Mekanik** | ₺4,090 |
 | **🔌 Elektronik** | ₺1,280 |
 | **🔗 Haberleşme** | ₺385 |
 | **🛡️ Güvenlik** | ₺440 |
 
-### **🎯 Toplam Tahmini Maliyet: ~₺32,145**
+### **🎯 Toplam Tahmini Maliyet: ~₺32,265**
 
 ---
 
