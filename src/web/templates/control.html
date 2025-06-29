@@ -9,7 +9,8 @@
             <div class="card-header bg-primary text-white">
                 <h5><i class="fas fa-gamepad"></i> Manuel Kontrol</h5>
                 <div class="form-check form-switch float-end">
-                    <input class="form-check-input" type="checkbox" id="manualControlSwitch" onchange="toggleManualControl()">
+                    <input class="form-check-input" type="checkbox" id="manualControlSwitch"
+                        onchange="toggleManualControl()">
                     <label class="form-check-label text-white" for="manualControlSwitch">
                         Manuel Kontrol
                     </label>
@@ -24,22 +25,25 @@
                             <div class="control-center" id="movementCenter"></div>
                         </div>
                         <p><small>Sürükleyerek hareket ettirin</small></p>
-                        
+
                         <div class="mt-3">
                             <label for="speedSlider" class="form-label">Hız: <span id="speedValue">50</span>%</label>
-                            <input type="range" class="form-range" id="speedSlider" min="10" max="100" value="50" onchange="updateSpeed()">
+                            <input type="range" class="form-range" id="speedSlider" min="10" max="100" value="50"
+                                onchange="updateSpeed()">
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <h6>Klavye Kontrolleri</h6>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-outline-primary" onmousedown="moveRobot('forward')" onmouseup="stopRobot()">
+                            <button class="btn btn-outline-primary" onmousedown="moveRobot('forward')"
+                                onmouseup="stopRobot()">
                                 <i class="fas fa-arrow-up"></i> İleri (W)
                             </button>
                             <div class="row">
                                 <div class="col-4">
-                                    <button class="btn btn-outline-primary" onmousedown="moveRobot('left')" onmouseup="stopRobot()">
+                                    <button class="btn btn-outline-primary" onmousedown="moveRobot('left')"
+                                        onmouseup="stopRobot()">
                                         <i class="fas fa-arrow-left"></i> Sol (A)
                                     </button>
                                 </div>
@@ -49,26 +53,30 @@
                                     </button>
                                 </div>
                                 <div class="col-4">
-                                    <button class="btn btn-outline-primary" onmousedown="moveRobot('right')" onmouseup="stopRobot()">
+                                    <button class="btn btn-outline-primary" onmousedown="moveRobot('right')"
+                                        onmouseup="stopRobot()">
                                         <i class="fas fa-arrow-right"></i> Sağ (D)
                                     </button>
                                 </div>
                             </div>
-                            <button class="btn btn-outline-primary" onmousedown="moveRobot('backward')" onmouseup="stopRobot()">
+                            <button class="btn btn-outline-primary" onmousedown="moveRobot('backward')"
+                                onmouseup="stopRobot()">
                                 <i class="fas fa-arrow-down"></i> Geri (X)
                             </button>
                         </div>
-                        
+
                         <div class="mt-4">
                             <h6>Hızlı Dönüş</h6>
                             <div class="row">
                                 <div class="col-6">
-                                    <button class="btn btn-outline-secondary" onmousedown="moveRobot('rotate_left')" onmouseup="stopRobot()">
+                                    <button class="btn btn-outline-secondary" onmousedown="moveRobot('rotate_left')"
+                                        onmouseup="stopRobot()">
                                         <i class="fas fa-undo"></i> Sol Dönüş (Q)
                                     </button>
                                 </div>
                                 <div class="col-6">
-                                    <button class="btn btn-outline-secondary" onmousedown="moveRobot('rotate_right')" onmouseup="stopRobot()">
+                                    <button class="btn btn-outline-secondary" onmousedown="moveRobot('rotate_right')"
+                                        onmouseup="stopRobot()">
                                         <i class="fas fa-redo"></i> Sağ Dönüş (E)
                                     </button>
                                 </div>
@@ -79,9 +87,48 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-gamepad"></i> Joystick Kontrolü</h5>
+                <div class="form-check form-switch float-end">
+                    <input class="form-check-input" type="checkbox" id="joystickMode" onchange="toggleJoystickMode()">
+                    <label class="form-check-label text-white" for="joystickMode">Aktif</label>
+                </div>
+            </div>
+            <div class="card-body text-center">
+                <div id="joystickContainer" class="position-relative mx-auto"
+                    style="width: 200px; height: 200px; display: none;">
+                    <svg width="200" height="200" class="joystick-background">
+                        <circle cx="100" cy="100" r="95" fill="none" stroke="#dee2e6" stroke-width="2" />
+                        <circle cx="100" cy="100" r="70" fill="none" stroke="#dee2e6" stroke-width="1" opacity="0.5" />
+                        <circle cx="100" cy="100" r="45" fill="none" stroke="#dee2e6" stroke-width="1" opacity="0.3" />
+                        <line x1="100" y1="20" x2="100" y2="40" stroke="#007bff" stroke-width="2" />
+                        <line x1="100" y1="160" x2="100" y2="180" stroke="#007bff" stroke-width="2" />
+                        <line x1="20" y1="100" x2="40" y2="100" stroke="#007bff" stroke-width="2" />
+                        <line x1="160" y1="100" x2="180" y2="100" stroke="#007bff" stroke-width="2" />
+                    </svg>
+                    <div id="joystickKnob" class="position-absolute bg-primary rounded-circle"
+                        style="width: 30px; height: 30px; top: 85px; left: 85px; cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                    </div>
+                </div>
+                <div id="joystickInfo" class="mt-3" style="display: none;">
+                    <small class="text-muted">
+                        X: <span id="joystickX">0.00</span> | Y: <span id="joystickY">0.00</span><br>
+                        Linear: <span id="joystickLinear">0.00</span> m/s | Angular: <span
+                            id="joystickAngular">0.00</span> rad/s
+                    </small>
+                </div>
+                <div id="joystickDisabled" class="text-center text-muted">
+                    <i class="fas fa-gamepad fa-3x mb-2 opacity-50"></i>
+                    <p>Joystick devre dışı</p>
+                    <small>Aktif etmek için yukarıdaki switch'i kullanın</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
             <div class="card-header">
                 <h5><i class="fas fa-cog"></i> Biçme Kontrolleri</h5>
             </div>
@@ -90,18 +137,19 @@
                     <button class="btn btn-success" id="bladeStartBtn" onclick="toggleBlade()">
                         <i class="fas fa-play"></i> Bıçağı Başlat
                     </button>
-                    
+
                     <div class="mt-3">
                         <label for="bladeHeightSlider" class="form-label">
                             Biçme Yüksekliği: <span id="bladeHeightValue">5</span> cm
                         </label>
-                        <input type="range" class="form-range" id="bladeHeightSlider" min="0" max="4" value="2" onchange="updateBladeHeight()">
+                        <input type="range" class="form-range" id="bladeHeightSlider" min="0" max="4" value="2"
+                            onchange="updateBladeHeight()">
                         <div class="form-text">3cm, 5cm, 7cm, 9cm, 11cm</div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="card mt-3">
             <div class="card-header">
                 <h5><i class="fas fa-info-circle"></i> Anlık Durum</h5>
@@ -129,7 +177,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card mt-3">
             <div class="card-header">
                 <h5><i class="fas fa-exclamation-triangle"></i> Güvenlik</h5>
@@ -143,7 +191,7 @@
                         <i class="fas fa-play"></i> Devam Et
                     </button>
                 </div>
-                
+
                 <div class="mt-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="obstacleAvoidance" checked>
@@ -177,16 +225,19 @@
             </div>
             <div class="card-body p-0">
                 <div id="cameraContainer" class="position-relative" style="height: 400px; background: #000;">
-                    <img id="cameraFeed" src="/video_feed" alt="Kamera" class="w-100 h-100" style="object-fit: cover; display: none;">
-                    <div id="cameraOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                    <img id="cameraFeed" src="/video_feed" alt="Kamera" class="w-100 h-100"
+                        style="object-fit: cover; display: none;">
+                    <div id="cameraOverlay"
+                        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
                         <div class="text-center">
                             <i class="fas fa-camera fa-3x mb-3"></i>
                             <p>Kamera Kapalı</p>
                         </div>
                     </div>
-                    
+
                     <!-- Kamera üzerinde bilgi overlay -->
-                    <div id="infoOverlay" class="position-absolute top-0 start-0 p-3 text-white" style="background: rgba(0,0,0,0.5); display: none;">
+                    <div id="infoOverlay" class="position-absolute top-0 start-0 p-3 text-white"
+                        style="background: rgba(0,0,0,0.5); display: none;">
                         <div style="font-family: monospace; font-size: 12px;">
                             <div>Hız: <span id="overlaySpeed">0.0 m/s</span></div>
                             <div>Pozisyon: <span id="overlayPosition">0,0</span></div>
@@ -210,16 +261,249 @@
     let maxSpeed = 0.5; // m/s
     let isDragging = false;
     let commandInterval;
-    
+
+    // Joystick kontrolü için değişkenler
+    let joystickMode = false;
+    let joystickActive = false;
+    let joystickCenter = { x: 100, y: 100 };
+    let joystickRadius = 85;
+    let currentJoystickPos = { x: 0, y: 0 };
+
+    // Socket bağlantısı
+    const socket = io();
+
+    // Joystick modu toggle
+    function toggleJoystickMode() {
+        joystickMode = document.getElementById('joystickMode').checked;
+        const container = document.getElementById('joystickContainer');
+        const info = document.getElementById('joystickInfo');
+        const disabled = document.getElementById('joystickDisabled');
+
+        if (joystickMode) {
+            container.style.display = 'block';
+            info.style.display = 'block';
+            disabled.style.display = 'none';
+            initJoystick();
+        } else {
+            container.style.display = 'none';
+            info.style.display = 'none';
+            disabled.style.display = 'block';
+            stopJoystick();
+        }
+    }
+
+    // Joystick başlatma
+    function initJoystick() {
+        const knob = document.getElementById('joystickKnob');
+        const container = document.getElementById('joystickContainer');
+
+        // Mouse olayları
+        knob.addEventListener('mousedown', startJoystickDrag);
+        document.addEventListener('mousemove', moveJoystick);
+        document.addEventListener('mouseup', stopJoystickDrag);
+
+        // Touch olayları (mobil için)
+        knob.addEventListener('touchstart', startJoystickDrag);
+        document.addEventListener('touchmove', moveJoystick);
+        document.addEventListener('touchend', stopJoystickDrag);
+
+        // Gamepad API kontrolü
+        checkGamepad();
+    }
+
+    function startJoystickDrag(e) {
+        e.preventDefault();
+        joystickActive = true;
+        document.getElementById('joystickKnob').style.cursor = 'grabbing';
+    }
+
+    function stopJoystickDrag(e) {
+        if (joystickActive) {
+            joystickActive = false;
+            // Joystick'i merkeze döndür
+            resetJoystick();
+            document.getElementById('joystickKnob').style.cursor = 'grab';
+            // Robot durdur
+            sendStopCommand();
+        }
+    }
+
+    function moveJoystick(e) {
+        if (!joystickActive || !joystickMode) return;
+
+        e.preventDefault();
+        const container = document.getElementById('joystickContainer');
+        const rect = container.getBoundingClientRect();
+
+        // Mouse/touch pozisyonunu al
+        let clientX, clientY;
+        if (e.type.includes('touch')) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        // Container içindeki relative pozisyon
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // Merkeze göre offset
+        const offsetX = x - joystickCenter.x;
+        const offsetY = y - joystickCenter.y;
+
+        // Mesafe hesapla
+        const distance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+
+        // Sınırları uygula
+        let finalX = offsetX;
+        let finalY = offsetY;
+
+        if (distance > joystickRadius) {
+            const angle = Math.atan2(offsetY, offsetX);
+            finalX = Math.cos(angle) * joystickRadius;
+            finalY = Math.sin(angle) * joystickRadius;
+        }
+
+        // Knob pozisyonunu güncelle
+        const knob = document.getElementById('joystickKnob');
+        knob.style.left = (joystickCenter.x + finalX - 15) + 'px';
+        knob.style.top = (joystickCenter.y + finalY - 15) + 'px';
+
+        // Normalize edilmiş değerler (-1 ile 1 arası)
+        currentJoystickPos.x = finalX / joystickRadius;
+        currentJoystickPos.y = -finalY / joystickRadius; // Y eksenini ters çevir
+
+        // Robot komutlarını hesapla ve gönder
+        updateRobotMovement();
+    }
+
+    function resetJoystick() {
+        const knob = document.getElementById('joystickKnob');
+        knob.style.left = (joystickCenter.x - 15) + 'px';
+        knob.style.top = (joystickCenter.y - 15) + 'px';
+        currentJoystickPos = { x: 0, y: 0 };
+        updateJoystickDisplay();
+    }
+
+    function updateRobotMovement() {
+        // Joystick pozisyonundan robot hızlarını hesapla
+        const linearSpeed = currentJoystickPos.y * maxSpeed; // İleri/geri
+        const angularSpeed = -currentJoystickPos.x * 2.0; // Sol/sağ dönüş (rad/s)
+
+        // Hızları güncelle
+        currentLinearSpeed = linearSpeed;
+        currentAngularSpeed = angularSpeed;
+
+        // Display'i güncelle
+        updateJoystickDisplay();
+
+        // Robot komutunu gönder
+        sendJoystickCommand(linearSpeed, angularSpeed);
+    }
+
+    function updateJoystickDisplay() {
+        document.getElementById('joystickX').textContent = currentJoystickPos.x.toFixed(2);
+        document.getElementById('joystickY').textContent = currentJoystickPos.y.toFixed(2);
+        document.getElementById('joystickLinear').textContent = currentLinearSpeed.toFixed(2);
+        document.getElementById('joystickAngular').textContent = currentAngularSpeed.toFixed(2);
+    }
+
+    function sendJoystickCommand(linear, angular) {
+        if (!joystickMode) return;
+
+        const command = {
+            type: 'joystick',
+            linear_speed: linear,
+            angular_speed: angular,
+            max_speed: maxSpeed
+        };
+
+        fetch('/api/manual_control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(command)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Joystick command failed:', data.error);
+                }
+            })
+            .catch(error => console.error('Joystick error:', error));
+    }
+
+    function sendStopCommand() {
+        fetch('/api/manual_control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'stop',
+                linear_speed: 0,
+                angular_speed: 0
+            })
+        });
+    }
+
+    function stopJoystick() {
+        joystickActive = false;
+        resetJoystick();
+        sendStopCommand();
+    }
+
+    // Gamepad API desteği
+    function checkGamepad() {
+        if (!navigator.getGamepads) return;
+
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+            const gamepad = gamepads[i];
+            if (gamepad && joystickMode) {
+                // Sol analog stick (axes 0,1)
+                const x = gamepad.axes[0] || 0;
+                const y = gamepad.axes[1] || 0;
+
+                // Deadzone uygula
+                const deadzone = 0.1;
+                const filteredX = Math.abs(x) > deadzone ? x : 0;
+                const filteredY = Math.abs(y) > deadzone ? y : 0;
+
+                if (Math.abs(filteredX) > 0 || Math.abs(filteredY) > 0) {
+                    // Virtual joystick pozisyonunu güncelle
+                    currentJoystickPos.x = filteredX;
+                    currentJoystickPos.y = -filteredY;
+
+                    // Knob pozisyonunu güncelle
+                    const knob = document.getElementById('joystickKnob');
+                    const finalX = filteredX * joystickRadius;
+                    const finalY = filteredY * joystickRadius;
+                    knob.style.left = (joystickCenter.x + finalX - 15) + 'px';
+                    knob.style.top = (joystickCenter.y - finalY - 15) + 'px';
+
+                    updateRobotMovement();
+                } else {
+                    resetJoystick();
+                    sendStopCommand();
+                }
+            }
+        }
+
+        // Gamepad kontrolünü sürekli kontrol et
+        if (joystickMode) {
+            requestAnimationFrame(checkGamepad);
+        }
+    }
+
     // Blade height seviyeleri
     const bladeHeights = [3, 5, 7, 9, 11]; // cm
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
         setupJoystick();
         setupKeyboardControls();
         startStatusUpdates();
     });
-    
+
     function setupJoystick() {
         const pad = document.getElementById('movementPad');
         const center = document.getElementById('movementCenter');
@@ -227,74 +511,74 @@
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         const maxDistance = centerX - 25; // 25px center radius
-        
+
         let startX = centerX;
         let startY = centerY;
-        
+
         function handleStart(e) {
             if (!manualControlActive) return;
             isDragging = true;
             e.preventDefault();
         }
-        
+
         function handleMove(e) {
             if (!isDragging || !manualControlActive) return;
             e.preventDefault();
-            
+
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            
+
             const rect = pad.getBoundingClientRect();
             const x = clientX - rect.left - centerX;
             const y = clientY - rect.top - centerY;
-            
-            const distance = Math.sqrt(x*x + y*y);
+
+            const distance = Math.sqrt(x * x + y * y);
             const angle = Math.atan2(y, x);
-            
+
             const limitedDistance = Math.min(distance, maxDistance);
             const finalX = limitedDistance * Math.cos(angle);
             const finalY = limitedDistance * Math.sin(angle);
-            
+
             center.style.left = (centerX + finalX) + 'px';
             center.style.top = (centerY + finalY) + 'px';
-            
+
             // Hızları hesapla (-1 ile 1 arası)
             currentLinearSpeed = -(finalY / maxDistance) * maxSpeed;
             currentAngularSpeed = (finalX / maxDistance) * 2; // 2 rad/s max
-            
+
             sendMovementCommand();
         }
-        
+
         function handleEnd(e) {
             if (!isDragging) return;
             isDragging = false;
-            
+
             // Merkeze geri dön
             center.style.left = centerX + 'px';
             center.style.top = centerY + 'px';
-            
+
             currentLinearSpeed = 0;
             currentAngularSpeed = 0;
             sendMovementCommand();
         }
-        
+
         // Mouse events
         pad.addEventListener('mousedown', handleStart);
         document.addEventListener('mousemove', handleMove);
         document.addEventListener('mouseup', handleEnd);
-        
+
         // Touch events
         pad.addEventListener('touchstart', handleStart);
         document.addEventListener('touchmove', handleMove);
         document.addEventListener('touchend', handleEnd);
     }
-    
+
     function setupKeyboardControls() {
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (!manualControlActive) return;
-            
+
             const key = e.key.toLowerCase();
-            switch(key) {
+            switch (key) {
                 case 'w':
                     moveRobot('forward');
                     break;
@@ -322,23 +606,23 @@
                     break;
             }
         });
-        
-        document.addEventListener('keyup', function(e) {
+
+        document.addEventListener('keyup', function (e) {
             if (!manualControlActive) return;
-            
+
             const key = e.key.toLowerCase();
             if (['w', 'a', 'd', 'x', 'q', 'e'].includes(key)) {
                 stopRobot();
             }
         });
     }
-    
+
     function toggleManualControl() {
         const switchElement = document.getElementById('manualControlSwitch');
         manualControlActive = switchElement.checked;
-        
+
         if (manualControlActive) {
-            fetch('/api/manual_control/enable', {method: 'POST'})
+            fetch('/api/manual_control/enable', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -350,7 +634,7 @@
                     }
                 });
         } else {
-            fetch('/api/manual_control/disable', {method: 'POST'})
+            fetch('/api/manual_control/disable', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     showAlert('Manuel kontrol modu deaktif', 'secondary');
@@ -358,10 +642,10 @@
                 });
         }
     }
-    
+
     function startCommandInterval() {
         if (commandInterval) clearInterval(commandInterval);
-        
+
         // Manuel kontrol aktifken sürekli konum gönder
         commandInterval = setInterval(() => {
             if (manualControlActive) {
@@ -369,21 +653,21 @@
             }
         }, 100); // 10Hz
     }
-    
+
     function stopCommandInterval() {
         if (commandInterval) {
             clearInterval(commandInterval);
             commandInterval = null;
         }
     }
-    
+
     function moveRobot(direction) {
         if (!manualControlActive) return;
-        
+
         const speedMultiplier = document.getElementById('speedSlider').value / 100;
         const speed = maxSpeed * speedMultiplier;
-        
-        switch(direction) {
+
+        switch (direction) {
             case 'forward':
                 currentLinearSpeed = speed;
                 currentAngularSpeed = 0;
@@ -409,49 +693,49 @@
                 currentAngularSpeed = -0.5;
                 break;
         }
-        
+
         sendMovementCommand();
         updateLastCommand(direction);
     }
-    
+
     function stopRobot() {
         currentLinearSpeed = 0;
         currentAngularSpeed = 0;
         sendMovementCommand();
         updateLastCommand('stop');
     }
-    
+
     function sendMovementCommand() {
         if (!manualControlActive) return;
-        
+
         const data = {
             linear: currentLinearSpeed,
             angular: currentAngularSpeed
         };
-        
+
         fetch('/api/manual_control', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .catch(error => console.error('Movement command error:', error));
-        
+            .then(response => response.json())
+            .catch(error => console.error('Movement command error:', error));
+
         // UI güncelle
-        document.getElementById('currentSpeed').textContent = 
+        document.getElementById('currentSpeed').textContent =
             `Linear: ${currentLinearSpeed.toFixed(2)} m/s, Angular: ${currentAngularSpeed.toFixed(2)} rad/s`;
     }
-    
+
     function updateSpeed() {
         const speedValue = document.getElementById('speedSlider').value;
         document.getElementById('speedValue').textContent = speedValue;
     }
-    
+
     function toggleBlade() {
         const btn = document.getElementById('bladeStartBtn');
-        
+
         if (bladeRunning) {
-            fetch('/api/blade/stop', {method: 'POST'})
+            fetch('/api/blade/stop', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -463,7 +747,7 @@
                     }
                 });
         } else {
-            fetch('/api/blade/start', {method: 'POST'})
+            fetch('/api/blade/start', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -476,34 +760,34 @@
                 });
         }
     }
-    
+
     function updateBladeHeight() {
         const slider = document.getElementById('bladeHeightSlider');
         const heightIndex = parseInt(slider.value);
         const height = bladeHeights[heightIndex];
-        
+
         document.getElementById('bladeHeightValue').textContent = height;
-        
+
         fetch('/api/blade/height', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({height_level: heightIndex})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ height_level: heightIndex })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert(`Biçme yüksekliği ${height}cm olarak ayarlandı`, 'info');
-            }
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(`Biçme yüksekliği ${height}cm olarak ayarlandı`, 'info');
+                }
+            });
     }
-    
+
     function toggleCamera() {
         cameraEnabled = !cameraEnabled;
         const feed = document.getElementById('cameraFeed');
         const overlay = document.getElementById('cameraOverlay');
         const infoOverlay = document.getElementById('infoOverlay');
         const btnText = document.getElementById('cameraBtnText');
-        
+
         if (cameraEnabled) {
             feed.style.display = 'block';
             overlay.style.display = 'none';
@@ -518,7 +802,7 @@
             socket.emit('stop_camera');
         }
     }
-    
+
     function updateLastCommand(command) {
         const commandText = {
             'forward': 'İleri',
@@ -529,11 +813,11 @@
             'rotate_right': 'Sağ Dönüş',
             'stop': 'Dur'
         };
-        
-        document.getElementById('lastCommand').textContent = 
+
+        document.getElementById('lastCommand').textContent =
             commandText[command] || command;
     }
-    
+
     function startStatusUpdates() {
         setInterval(() => {
             fetch('/api/status')
@@ -544,37 +828,37 @@
                 .catch(error => console.error('Status update error:', error));
         }, 1000);
     }
-    
+
     function updateStatusDisplay(status) {
         if (status.power) {
-            document.getElementById('batteryLevel').textContent = 
+            document.getElementById('batteryLevel').textContent =
                 `${status.power.battery_level.toFixed(1)}% (${status.power.voltage.toFixed(1)}V)`;
-            
+
             // Overlay güncelle
-            document.getElementById('overlayBattery').textContent = 
+            document.getElementById('overlayBattery').textContent =
                 `${status.power.battery_level.toFixed(1)}%`;
         }
-        
+
         if (status.main_controller && status.main_controller.position) {
             const pos = status.main_controller.position;
             const heading = (pos.heading * 180 / Math.PI).toFixed(1);
-            document.getElementById('currentPosition').textContent = 
+            document.getElementById('currentPosition').textContent =
                 `X: ${pos.x.toFixed(2)}, Y: ${pos.y.toFixed(2)}, θ: ${heading}°`;
-                
-            document.getElementById('overlayPosition').textContent = 
+
+            document.getElementById('overlayPosition').textContent =
                 `${pos.x.toFixed(1)},${pos.y.toFixed(1)}`;
         }
-        
+
         if (status.robot_velocity) {
-            document.getElementById('overlaySpeed').textContent = 
+            document.getElementById('overlaySpeed').textContent =
                 `${status.robot_velocity.linear.toFixed(1)} m/s`;
         }
     }
-    
+
     // Sayfa kapatılırken manuel kontrolü deaktifleştir
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
         if (manualControlActive) {
-            fetch('/api/manual_control/disable', {method: 'POST'});
+            fetch('/api/manual_control/disable', { method: 'POST' });
         }
         stopCommandInterval();
     });

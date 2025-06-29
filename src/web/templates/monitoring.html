@@ -1,0 +1,770 @@
+{% extends "base.html" %}
+
+{% block title %}Sistem İzleme - OBA Robot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .chart-container {
+        height: 300px;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .log-container {
+        height: 400px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+
+    .log-entry {
+        margin-bottom: 5px;
+        padding: 2px 0;
+    }
+
+    .log-info {
+        color: #007bff;
+    }
+
+    .log-warning {
+        color: #ffc107;
+    }
+
+    .log-error {
+        color: #dc3545;
+    }
+
+    .log-success {
+        color: #28a745;
+    }
+
+    .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .sensor-item {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .sensor-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .sensor-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .system-health {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .performance-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .network-card {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Üst Metrikler -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card system-health">
+                <div class="text-center">
+                    <i class="fas fa-heartbeat metric-icon"></i>
+                    <div class="metric-value" id="system-health">95%</div>
+                    <div class="metric-label">Sistem Sağlığı</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card performance-card">
+                <div class="text-center">
+                    <i class="fas fa-tachometer-alt metric-icon"></i>
+                    <div class="metric-value" id="cpu-usage">12%</div>
+                    <div class="metric-label">CPU Kullanımı</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="text-center">
+                    <i class="fas fa-memory metric-icon"></i>
+                    <div class="metric-value" id="memory-usage">45%</div>
+                    <div class="metric-label">RAM Kullanımı</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card network-card">
+                <div class="text-center">
+                    <i class="fas fa-wifi metric-icon"></i>
+                    <div class="metric-value" id="network-status">Güçlü</div>
+                    <div class="metric-label">Ağ Durumu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Panel - Sensör Verileri -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-microchip"></i> Sensör Verileri</h5>
+                    <div class="form-check form-switch float-end">
+                        <input class="form-check-input" type="checkbox" id="auto-refresh" checked>
+                        <label class="form-check-label text-white" for="auto-refresh">
+                            Otomatik Yenile
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="sensor-grid">
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-thermometer-half text-warning"></i>
+                            </div>
+                            <div class="sensor-value" id="temperature">--°C</div>
+                            <div class="sensor-label">Sıcaklık</div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-tint text-info"></i>
+                            </div>
+                            <div class="sensor-value" id="humidity">--%</div>
+                            <div class="sensor-label">Nem</div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-eye text-primary"></i>
+                            </div>
+                            <div class="sensor-value" id="distance">-- cm</div>
+                            <div class="sensor-label">Mesafe</div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-compass text-success"></i>
+                            </div>
+                            <div class="sensor-value" id="heading">--°</div>
+                            <div class="sensor-label">Yön</div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-road text-secondary"></i>
+                            </div>
+                            <div class="sensor-value" id="inclination">--°</div>
+                            <div class="sensor-label">Eğim</div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-icon">
+                                <i class="fas fa-satellite text-info"></i>
+                            </div>
+                            <div class="sensor-value" id="gps-satellites">--</div>
+                            <div class="sensor-label">GPS Uydu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performans Grafikleri -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Performans Grafikleri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel - Sistem Durumu ve Loglar -->
+        <div class="col-md-6">
+            <!-- Motor Durumları -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-cogs"></i> Motor Durumları</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Sol Motor</h6>
+                            <p><strong>Hız:</strong> <span id="left-motor-speed">-- RPM</span></p>
+                            <p><strong>Akım:</strong> <span id="left-motor-current">-- A</span></p>
+                            <p><strong>Sıcaklık:</strong> <span id="left-motor-temp">-- °C</span></p>
+                            <div class="progress mb-2">
+                                <div id="left-motor-load" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <small>Yük: <span id="left-motor-load-text">0%</span></small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Sağ Motor</h6>
+                            <p><strong>Hız:</strong> <span id="right-motor-speed">-- RPM</span></p>
+                            <p><strong>Akım:</strong> <span id="right-motor-current">-- A</span></p>
+                            <p><strong>Sıcaklık:</strong> <span id="right-motor-temp">-- °C</span></p>
+                            <div class="progress mb-2">
+                                <div id="right-motor-load" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <small>Yük: <span id="right-motor-load-text">0%</span></small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Biçme Motoru</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>Hız:</strong> <span id="blade-motor-speed">-- RPM</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Akım:</strong> <span id="blade-motor-current">-- A</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Durum:</strong> <span id="blade-motor-status"
+                                            class="badge bg-secondary">Kapalı</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sistem Logları -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-file-alt"></i> Sistem Logları</h5>
+                    <div class="btn-group float-end" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="clearLogs()">
+                            <i class="fas fa-trash"></i> Temizle
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="downloadLogs()">
+                            <i class="fas fa-download"></i> İndir
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="log-container" id="log-container">
+                        <div class="log-entry log-info">[2025-06-28 10:30:15] INFO: Robot başlatıldı</div>
+                        <div class="log-entry log-success">[2025-06-28 10:30:16] SUCCESS: Tüm sensörler bağlandı</div>
+                        <div class="log-entry log-info">[2025-06-28 10:30:17] INFO: Web server başlatıldı</div>
+                        <div class="log-entry log-warning">[2025-06-28 10:30:18] WARNING: GPS sinyali zayıf</div>
+                        <div class="log-entry log-info">[2025-06-28 10:30:19] INFO: Manuel kontrol modu aktif</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alt Panel - Batarya ve Güç Yönetimi -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-battery-half"></i> Batarya ve Güç Yönetimi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="battery-container mb-2">
+                                    <div class="battery-fill" id="main-battery-fill" style="width: 85%"></div>
+                                    <div class="battery-text" id="main-battery-text">85%</div>
+                                </div>
+                                <h6>Ana Batarya</h6>
+                                <p><small>Voltaj: <span id="main-battery-voltage">12.6V</span></small></p>
+                                <p><small>Akım: <span id="main-battery-current">2.3A</span></small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="battery-container mb-2">
+                                    <div class="battery-fill" id="backup-battery-fill" style="width: 92%"></div>
+                                    <div class="battery-text" id="backup-battery-text">92%</div>
+                                </div>
+                                <h6>Yedek Batarya</h6>
+                                <p><small>Voltaj: <span id="backup-battery-voltage">12.8V</span></small></p>
+                                <p><small>Durum: <span id="backup-battery-status">Hazır</span></small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-plug fa-3x text-primary mb-2"></i>
+                                <h6>Şarj Durumu</h6>
+                                <p><span id="charging-status" class="badge bg-warning">Şarj Olmuyor</span></p>
+                                <p><small>Güç: <span id="charging-power">0W</span></small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-bolt fa-3x text-warning mb-2"></i>
+                                <h6>Toplam Güç</h6>
+                                <p><strong><span id="total-power">28.4W</span></strong></p>
+                                <p><small>Verimlilik: <span id="power-efficiency">87%</span></small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Performans grafiği
+    const ctx = document.getElementById('performance-chart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPU Kullanımı (%)',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'RAM Kullanımı (%)',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Monitoring data update
+    function updateMonitoringData() {
+        if (!window.obaInterface || !window.obaInterface.connected) return;
+
+        // API'den monitoring data al
+        fetch('/api/monitoring')
+            .then(response => response.json())
+            .then(data => {
+                updateSystemMetrics(data.system || {});
+                updateSensorData(data.sensors || {});
+                updateMotorStatus(data.motors || {});
+                updatePowerStatus(data.power || {});
+                updatePerformanceChart(data.performance || {});
+            })
+            .catch(error => {
+                console.error('Monitoring data hatası:', error);
+            });
+    }
+
+    function updateSystemMetrics(system) {
+        const elements = {
+            'system-health': system.health || '95',
+            'cpu-usage': system.cpu_usage || '12',
+            'memory-usage': system.memory_usage || '45',
+            'network-status': system.network_status || 'Güçlü'
+        };
+
+        Object.keys(elements).forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                if (id === 'network-status') {
+                    element.textContent = elements[id];
+                } else {
+                    element.textContent = elements[id] + '%';
+                }
+            }
+        });
+    }
+
+    function updateSensorData(sensors) {
+        const sensorElements = {
+            'temperature': (sensors.temperature || 25) + '°C',
+            'humidity': (sensors.humidity || 60) + '%',
+            'distance': (sensors.distance || 50) + ' cm',
+            'heading': (sensors.heading || 180) + '°',
+            'inclination': (sensors.inclination || 0) + '°',
+            'gps-satellites': sensors.gps_satellites || '8'
+        };
+
+        Object.keys(sensorElements).forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = sensorElements[id];
+            }
+        });
+    }
+
+    function updateMotorStatus(motors) {
+        // Sol motor
+        if (motors.left) {
+            updateMotorElements('left', motors.left);
+        }
+
+        // Sağ motor
+        if (motors.right) {
+            updateMotorElements('right', motors.right);
+        }
+
+        // Biçme motoru
+        if (motors.blade) {
+            const elements = {
+                'blade-motor-speed': (motors.blade.speed || 0) + ' RPM',
+                'blade-motor-current': (motors.blade.current || 0) + ' A',
+                'blade-motor-status': motors.blade.enabled ? 'Çalışıyor' : 'Kapalı'
+            };
+
+            Object.keys(elements).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'blade-motor-status') {
+                        element.textContent = elements[id];
+                        element.className = motors.blade.enabled ? 'badge bg-success' : 'badge bg-secondary';
+                    } else {
+                        element.textContent = elements[id];
+                    }
+                }
+            });
+        }
+    }
+
+    function updateMotorElements(side, motorData) {
+        const elements = {
+            [`${side}-motor-speed`]: (motorData.speed || 0) + ' RPM',
+            [`${side}-motor-current`]: (motorData.current || 0) + ' A',
+            [`${side}-motor-temp`]: (motorData.temperature || 25) + ' °C',
+            [`${side}-motor-load-text`]: (motorData.load || 0) + '%'
+        };
+
+        Object.keys(elements).forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = elements[id];
+            }
+        });
+
+        // Load bar
+        const loadBar = document.getElementById(`${side}-motor-load`);
+        if (loadBar && motorData.load !== undefined) {
+            loadBar.style.width = motorData.load + '%';
+
+            if (motorData.load > 80) {
+                loadBar.className = 'progress-bar bg-danger';
+            } else if (motorData.load > 60) {
+                loadBar.className = 'progress-bar bg-warning';
+            } else {
+                loadBar.className = 'progress-bar bg-success';
+            }
+        }
+    }
+
+    function updatePowerStatus(power) {
+        // Ana batarya
+        if (power.main_battery) {
+            updateBatteryDisplay('main-battery', power.main_battery);
+        }
+
+        // Yedek batarya
+        if (power.backup_battery) {
+            updateBatteryDisplay('backup-battery', power.backup_battery);
+        }
+
+        // Şarj durumu
+        const chargingStatus = document.getElementById('charging-status');
+        const chargingPower = document.getElementById('charging-power');
+
+        if (chargingStatus && power.charging !== undefined) {
+            chargingStatus.textContent = power.charging ? 'Şarj Oluyor' : 'Şarj Olmuyor';
+            chargingStatus.className = power.charging ? 'badge bg-success' : 'badge bg-warning';
+        }
+
+        if (chargingPower && power.charging_power !== undefined) {
+            chargingPower.textContent = power.charging_power + 'W';
+        }
+
+        // Toplam güç
+        const totalPower = document.getElementById('total-power');
+        const powerEfficiency = document.getElementById('power-efficiency');
+
+        if (totalPower && power.total_power !== undefined) {
+            totalPower.textContent = power.total_power + 'W';
+        }
+
+        if (powerEfficiency && power.efficiency !== undefined) {
+            powerEfficiency.textContent = power.efficiency + '%';
+        }
+    }
+
+    function updateBatteryDisplay(prefix, batteryData) {
+        const fill = document.getElementById(`${prefix}-fill`);
+        const text = document.getElementById(`${prefix}-text`);
+        const voltage = document.getElementById(`${prefix}-voltage`);
+        const current = document.getElementById(`${prefix}-current`);
+
+        if (fill && batteryData.level !== undefined) {
+            fill.style.width = batteryData.level + '%';
+        }
+
+        if (text && batteryData.level !== undefined) {
+            text.textContent = batteryData.level + '%';
+        }
+
+        if (voltage && batteryData.voltage !== undefined) {
+            voltage.textContent = batteryData.voltage + 'V';
+        }
+
+        if (current && batteryData.current !== undefined) {
+            current.textContent = batteryData.current + 'A';
+        }
+    }
+
+    function updatePerformanceChart(performance) {
+        if (!performance.timestamps || !performance.cpu || !performance.memory) return;
+
+        const chart = performanceChart;
+        const maxPoints = 20;
+
+        // Timestamps
+        if (performance.timestamps.length > maxPoints) {
+            performance.timestamps = performance.timestamps.slice(-maxPoints);
+            performance.cpu = performance.cpu.slice(-maxPoints);
+            performance.memory = performance.memory.slice(-maxPoints);
+        }
+
+        chart.data.labels = performance.timestamps;
+        chart.data.datasets[0].data = performance.cpu;
+        chart.data.datasets[1].data = performance.memory;
+
+        chart.update('none'); // Animasyon olmadan güncelle
+    }
+
+    function addLogEntry(message, type = 'info') {
+        const logContainer = document.getElementById('log-container');
+        if (!logContainer) return;
+
+        const timestamp = new Date().toLocaleString('tr-TR');
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry log-${type}`;
+        logEntry.textContent = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // Maksimum 100 log entry tut
+        const entries = logContainer.children;
+        if (entries.length > 100) {
+            logContainer.removeChild(entries[0]);
+        }
+    }
+
+    function clearLogs() {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            logContainer.innerHTML = '';
+            addLogEntry('Log temizlendi', 'info');
+        }
+    }
+
+    function downloadLogs() {
+        const logContainer = document.getElementById('log-container');
+        if (!logContainer) return;
+
+        const logs = Array.from(logContainer.children).map(entry => entry.textContent).join('\n');
+        const blob = new Blob([logs], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `oba_robot_logs_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Auto refresh toggle
+    let autoRefreshInterval;
+
+    document.getElementById('auto-refresh').addEventListener('change', function (e) {
+        if (e.target.checked) {
+            autoRefreshInterval = setInterval(updateMonitoringData, 2000);
+            addLogEntry('Otomatik yenileme aktif', 'info');
+        } else {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            addLogEntry('Otomatik yenileme deaktif', 'warning');
+        }
+    });
+
+    // Log fonksiyonları
+    function clearLogs() {
+        const logContainer = document.getElementById('log-container');
+        logContainer.innerHTML = '<div class="log-entry log-info">[' + new Date().toLocaleString() + '] INFO: Loglar temizlendi</div>';
+    }
+
+    function downloadLogs() {
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs) {
+                    const logText = data.logs.join('\n');
+                    const blob = new Blob([logText], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `oba_robot_logs_${new Date().toISOString().split('T')[0]}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    addLogEntry('Loglar indirildi', 'success');
+                } else {
+                    addLogEntry('Log indirme hatası', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Log download error:', error);
+                addLogEntry('Log indirme hatası: ' + error.message, 'error');
+            });
+    }
+
+    function loadSystemLogs() {
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(data => {
+                const logContainer = document.getElementById('log-container');
+                if (data.logs && data.logs.length > 0) {
+                    // Son 50 log girişini göster
+                    const recentLogs = data.logs.slice(-50);
+                    logContainer.innerHTML = '';
+
+                    recentLogs.forEach(logLine => {
+                        const entry = document.createElement('div');
+                        entry.className = 'log-entry';
+
+                        // Log seviyesini belirle
+                        if (logLine.includes('ERROR')) {
+                            entry.classList.add('log-error');
+                        } else if (logLine.includes('WARNING')) {
+                            entry.classList.add('log-warning');
+                        } else if (logLine.includes('SUCCESS')) {
+                            entry.classList.add('log-success');
+                        } else {
+                            entry.classList.add('log-info');
+                        }
+
+                        entry.textContent = logLine;
+                        logContainer.appendChild(entry);
+                    });
+
+                    // En son log'a scroll
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                } else {
+                    logContainer.innerHTML = '<div class="log-entry log-info">[' + new Date().toLocaleString() + '] INFO: Henüz log girişi yok</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Log loading error:', error);
+                const logContainer = document.getElementById('log-container');
+                logContainer.innerHTML = '<div class="log-entry log-error">[' + new Date().toLocaleString() + '] ERROR: Log yükleme hatası: ' + error.message + '</div>';
+            });
+    }
+
+    function addLogEntry(message, level = 'info') {
+        const logContainer = document.getElementById('log-container');
+        const entry = document.createElement('div');
+        entry.className = `log-entry log-${level}`;
+        entry.textContent = `[${new Date().toLocaleString()}] ${level.toUpperCase()}: ${message}`;
+
+        logContainer.appendChild(entry);
+
+        // Scroll to bottom
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // Max 100 log girişi tut
+        while (logContainer.children.length > 100) {
+            logContainer.removeChild(logContainer.firstChild);
+        }
+    }
+
+    // İlk yükleme
+    document.addEventListener('DOMContentLoaded', function () {
+        // İlk veri yüklemesi
+        setTimeout(updateMonitoringData, 1000);
+
+        // Sistem loglarını yükle
+        loadSystemLogs();
+
+        // Otomatik yenileme başlat
+        autoRefreshInterval = setInterval(updateMonitoringData, 2000);
+
+        // Log yenileme için interval
+        setInterval(loadSystemLogs, 10000); // 10 saniyede bir log yenile
+
+        addLogEntry('İzleme paneli başlatıldı', 'success');
+    });
+</script>
+{% endblock %}

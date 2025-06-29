@@ -169,7 +169,7 @@ class MainController:
 
                 # Pozisyon güncelle
                 if self.odometry:
-                    pos = self.odometry.get_position()
+                    pos = self.odometry.get_position_dict()
                     self.stats["current_position"] = pos
 
                 time.sleep(0.1)  # 10Hz kontrol döngüsü
@@ -213,18 +213,19 @@ class MainController:
 
     def _handle_mowing_state(self):
         """Biçme durumu"""
-        if not self.path_planner or not self.motor_controller:
+        if not self.path_planner or not self.motor_controller or not self.odometry:
             return
 
         # Batarya kontrolü
-        battery_level = self.power_manager.get_battery_level()
-        if battery_level < self.config["battery"]["low_threshold"]:
-            self.state = RobotState.RETURNING_TO_CHARGE
-            self.logger.info("Biçme sırasında batarya düştü, şarja dönülüyor")
-            return
+        if self.power_manager:
+            battery_level = self.power_manager.get_battery_level()
+            if battery_level < self.config["battery"]["low_threshold"]:
+                self.state = RobotState.RETURNING_TO_CHARGE
+                self.logger.info("Biçme sırasında batarya düştü, " "şarja dönülüyor")
+                return
 
         # Rota takibi
-        current_pos = self.odometry.get_position()
+        current_pos = self.odometry.get_position_dict()
         next_waypoint = self.path_planner.get_next_waypoint(current_pos)
 
         if next_waypoint:
@@ -240,7 +241,7 @@ class MainController:
 
                 # Engel kaçınma komutu al
                 safe_command = self.obstacle_avoidance.get_avoidance_command(
-                    planned_linear, planned_angular, current_pos.x, current_pos.y
+                    planned_linear, planned_angular, current_pos["x"], current_pos["y"]
                 )
 
                 # Güvenli komutu motora gönder
@@ -262,12 +263,12 @@ class MainController:
 
     def _handle_returning_state(self):
         """Şarja dönme durumu"""
-        if not self.docking_controller:
+        if not self.docking_controller or not self.odometry:
             return
 
         # Şarj istasyonuna git
         station_pos = self.config["charging_station"]["position"]
-        current_pos = self.odometry.get_position()
+        current_pos = self.odometry.get_position_dict()
 
         # Mesafe hesapla
         distance = (
@@ -277,7 +278,8 @@ class MainController:
 
         if distance > self.config["charging_station"]["docking_precision"]:
             # İstasyona doğru hareket et
-            self.motor_controller.move_to_position(station_pos)
+            if self.motor_controller:
+                self.motor_controller.move_to_position(station_pos)
         else:
             # Docking işlemi
             if self.docking_controller.dock_to_station():

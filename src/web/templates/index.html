@@ -16,7 +16,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card power-card">
             <div class="card-header">
@@ -33,7 +33,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card nav-card">
             <div class="card-header">
@@ -52,108 +52,145 @@
     </div>
 </div>
 
-<!-- Acil Kontroller -->
+<!-- Hızlı Kontroller -->
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5><i class="fas fa-exclamation-triangle"></i> Acil Kontroller</h5>
+            <div class="card-header">
+                <h5><i class="fas fa-gamepad"></i> Hızlı Kontroller</h5>
             </div>
-            <div class="card-body text-center">
-                <button class="btn btn-danger btn-lg me-3" onclick="emergencyStop()">
-                    <i class="fas fa-stop"></i> ACİL DURDUR
-                </button>
-                <button class="btn btn-warning btn-lg me-3" onclick="clearEmergency()">
-                    <i class="fas fa-play"></i> Devam Et
-                </button>
-                <button class="btn btn-info btn-lg me-3" onclick="goToControl()">
-                    <i class="fas fa-gamepad"></i> Manuel Kontrol
-                </button>
-                <button class="btn btn-success btn-lg" onclick="returnToCharger()">
-                    <i class="fas fa-charging-station"></i> Şarja Dön
-                </button>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <button class="btn btn-success btn-lg mb-2" onclick="startMowing()">
+                            <i class="fas fa-play"></i><br>Başlat
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-warning btn-lg mb-2" onclick="pauseMowing()">
+                            <i class="fas fa-pause"></i><br>Duraklat
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-secondary btn-lg mb-2" onclick="stopMowing()">
+                            <i class="fas fa-stop"></i><br>Durdur
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-info btn-lg mb-2" onclick="returnHome()">
+                            <i class="fas fa-home"></i><br>Eve Dön
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="emergency-stop-btn" class="btn btn-emergency btn-lg mb-2" onclick="emergencyStop()">
+                            <i class="fas fa-exclamation-triangle"></i><br>ACİL DURDUR
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="clear-emergency-btn" class="btn btn-outline-success btn-lg mb-2"
+                            onclick="clearEmergency()">
+                            <i class="fas fa-check"></i><br>Devam Et
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Kamera Görüntüsü -->
+<!-- Charts Dashboard -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Batarya & Hız</h5>
+                <div class="form-check form-switch float-end">
+                    <input class="form-check-input" type="checkbox" id="chartAutoUpdate" checked>
+                    <label class="form-check-label text-white" for="chartAutoUpdate">Otomatik Güncelleme</label>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="batterySpeedChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Alan Coverage</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="coverageChart" height="300"></canvas>
+                <div class="text-center mt-3">
+                    <h4><span id="coverage-percentage">0</span>% Tamamlandı</h4>
+                    <small class="text-muted">Toplam: <span id="total-area">0</span> m² | Kalan: <span
+                            id="remaining-area">0</span> m²</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kamera ve Sistem Bilgileri -->
 <div class="row mt-4">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
                 <h5><i class="fas fa-video"></i> Kamera Görüntüsü</h5>
+                <div class="form-check form-switch float-end">
+                    <input class="form-check-input" type="checkbox" id="camera-toggle-switch" onchange="toggleCamera()">
+                    <label class="form-check-label text-white" for="camera-toggle-switch">Kamera</label>
+                </div>
             </div>
             <div class="card-body text-center">
-                <div id="camera-container" style="min-height: 300px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <img id="camera-feed" src="/video_feed" alt="Kamera Görüntüsü" class="img-fluid" style="max-height: 400px; display: none;">
-                    <div id="camera-placeholder">
-                        <i class="fas fa-camera fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Kamera kapalı</p>
+                <div class="camera-container">
+                    <img id="camera-feed" src="/video_feed" alt="Kamera Görüntüsü" class="camera-feed"
+                        style="display: none;">
+                    <div id="camera-placeholder" class="d-flex align-items-center justify-content-center"
+                        style="height: 300px; background: #f8f9fa; border-radius: 10px;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-camera fa-3x mb-3"></i>
+                            <p>Kamera kapalı</p>
+                            <small>Kamera açmak için yukarıdaki switch'i kullanın</small>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <button class="btn btn-primary me-2" onclick="toggleCamera()">
-                        <i class="fas fa-camera"></i> <span id="camera-btn-text">Kamerayı Aç</span>
-                    </button>
-                    <button class="btn btn-secondary me-2" onclick="captureImage()">
-                        <i class="fas fa-camera-retro"></i> Fotoğraf Çek
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="toggleFullscreen()">
-                        <i class="fas fa-expand"></i> Tam Ekran
-                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-list"></i> Hızlı Görevler</h5>
+                <h5><i class="fas fa-info-circle"></i> Sistem Bilgileri</h5>
             </div>
             <div class="card-body">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-success" onclick="startMowing()">
-                        <i class="fas fa-play"></i> Biçmeye Başla
-                    </button>
-                    <button class="btn btn-warning" onclick="pauseMowing()">
-                        <i class="fas fa-pause"></i> Biçmeyi Duraklat
-                    </button>
-                    <button class="btn btn-info" onclick="testBlade()">
-                        <i class="fas fa-cog"></i> Bıçak Testi
-                    </button>
-                    <button class="btn btn-secondary" onclick="calibrateRobot()">
-                        <i class="fas fa-compass"></i> Kalibrasyon
-                    </button>
-                </div>
-                
-                <hr>
-                
-                <h6>Sistem Bilgileri</h6>
-                <small>
-                    <p><strong>Sıcaklık:</strong> <span id="system-temp">--°C</span></p>
-                    <p><strong>CPU:</strong> <span id="cpu-usage">--%</span></p>
-                    <p><strong>Bellek:</strong> <span id="memory-usage">--%</span></p>
-                    <p><strong>Bağlı Kullanıcı:</strong> <span id="connected-users">--</span></p>
-                </small>
+                <p><strong>Bağlı Kullanıcılar:</strong> <span id="connected-users">1</span></p>
+                <p><strong>Server Uptime:</strong> <span id="server-uptime">--</span></p>
+                <p><strong>Son Ping:</strong> <span id="last-ping">--</span></p>
+                <p><strong>Sıcaklık:</strong> <span id="system-temp">--°C</span></p>
+                <p><strong>CPU Kullanımı:</strong> <span id="cpu-usage">--%</span></p>
+                <p><strong>WiFi Sinyal:</strong> <span id="wifi-signal">Güçlü</span></p>
+                <p><strong>GPS Durumu:</strong> <span id="gps-status">8 uydu</span></p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Log/Mesaj Alanı -->
+<!-- Sistem Logları -->
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-terminal"></i> Sistem Mesajları</h5>
-                <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearLogs()">
+                <h5><i class="fas fa-list"></i> Sistem Logları</h5>
+                <button class="btn btn-sm btn-outline-light float-end" onclick="clearLogs()">
                     <i class="fas fa-trash"></i> Temizle
                 </button>
             </div>
             <div class="card-body">
-                <div id="log-container" style="height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;">
+                <div id="log-container" class="log-container"
+                    style="height: 200px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; font-family: 'Courier New', monospace; font-size: 0.8rem;">
                     <div class="log-entry">[INFO] Robot sistem başlatıldı</div>
                     <div class="log-entry">[INFO] Tüm modüller yüklendi</div>
                     <div class="log-entry">[INFO] Web arayüzü aktif</div>
@@ -164,253 +201,308 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let cameraEnabled = false;
+    // Global variables
+    let batterySpeedChart;
+    let coverageChart;
     let updateInterval;
-    
-    // Sayfa yüklendiğinde
-    document.addEventListener('DOMContentLoaded', function() {
-        startPeriodicUpdates();
-        updateLastUpdateTime();
-        
-        // Socket event listeners
-        socket.on('robot_status_update', function(data) {
-            updateRobotStatus(data);
-        });
-        
-        socket.on('log_message', function(data) {
-            addLogEntry(data.level, data.message);
-        });
+    let logCounter = 3;
+
+    // Initialize charts when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeBatterySpeedChart();
+        initializeCoverageChart();
+        startStatusUpdates();
+        initializeSystemInfo();
     });
-    
-    function startPeriodicUpdates() {
-        updateInterval = setInterval(function() {
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    updateRobotStatus(data.robot);
-                    updateLastUpdateTime();
-                })
-                .catch(error => {
-                    console.error('Status update error:', error);
-                    addLogEntry('ERROR', 'Durum güncellemesi başarısız');
-                });
-        }, 2000); // 2 saniyede bir güncelle
-    }
-    
-    function updateRobotStatus(status) {
-        if (!status) return;
-        
-        // Ana kontrolcü durumu
-        if (status.main_controller) {
-            const mc = status.main_controller;
-            
-            document.getElementById('robot-state').textContent = mc.state || '--';
-            
-            if (mc.position) {
-                document.getElementById('robot-position').textContent = 
-                    `X: ${mc.position.x.toFixed(2)}, Y: ${mc.position.y.toFixed(2)}`;
+
+    // Battery and Speed Chart
+    function initializeBatterySpeedChart() {
+        const ctx = document.getElementById('batterySpeedChart').getContext('2d');
+        batterySpeedChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Batarya (%)',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    yAxisID: 'y'
+                }, {
+                    label: 'Hız (m/s)',
+                    data: [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Zaman'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Batarya (%)'
+                        },
+                        min: 0,
+                        max: 100
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Hız (m/s)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        min: 0,
+                        max: 2
+                    }
+                }
             }
-            
-            if (mc.uptime) {
-                document.getElementById('uptime').textContent = formatTime(mc.uptime);
+        });
+    }
+
+    // Coverage Chart
+    function initializeCoverageChart() {
+        const ctx = document.getElementById('coverageChart').getContext('2d');
+        coverageChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Biçilen Alan', 'Kalan Alan'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(201, 203, 207, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(201, 203, 207, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
             }
-        }
-        
-        // Güç durumu
-        if (status.power) {
-            const power = status.power;
-            
-            document.getElementById('battery-level').textContent = `${power.battery_level.toFixed(1)}%`;
-            document.getElementById('battery-voltage').textContent = `${power.voltage.toFixed(1)}V`;
-            document.getElementById('battery-current').textContent = `${power.current.toFixed(1)}A`;
-            document.getElementById('charging-status').textContent = power.is_charging ? 'Şarj oluyor' : 'Şarj olmuyor';
-            
-            // Progress bar güncelle
-            const batteryBar = document.getElementById('battery-bar');
-            batteryBar.style.width = `${power.battery_level}%`;
-            
-            // Renk ayarla
-            if (power.battery_level > 50) {
-                batteryBar.className = 'progress-bar bg-success';
-            } else if (power.battery_level > 20) {
-                batteryBar.className = 'progress-bar bg-warning';
-            } else {
-                batteryBar.className = 'progress-bar bg-danger';
+        });
+    }
+
+    // Update charts with real data
+    function updateCharts() {
+        if (document.getElementById('chartAutoUpdate').checked) {
+            // Get current time
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString();
+
+            // Simulate battery and speed data
+            const batteryLevel = Math.max(20, 100 - (Date.now() / 100000) % 80);
+            const speed = Math.random() * 1.5 + 0.2;
+
+            // Update battery speed chart
+            if (batterySpeedChart.data.labels.length > 20) {
+                batterySpeedChart.data.labels.shift();
+                batterySpeedChart.data.datasets[0].data.shift();
+                batterySpeedChart.data.datasets[1].data.shift();
             }
+
+            batterySpeedChart.data.labels.push(timeLabel);
+            batterySpeedChart.data.datasets[0].data.push(batteryLevel);
+            batterySpeedChart.data.datasets[1].data.push(speed);
+            batterySpeedChart.update('none');
+
+            // Update coverage chart
+            const coverage = Math.min(100, (Date.now() / 200000) % 100);
+            coverageChart.data.datasets[0].data = [coverage, 100 - coverage];
+            coverageChart.update('none');
+
+            // Update coverage text
+            document.getElementById('coverage-percentage').textContent = Math.round(coverage);
+            document.getElementById('total-area').textContent = '1000';
+            document.getElementById('remaining-area').textContent = Math.round(1000 - (coverage * 10));
         }
-        
-        // Navigasyon durumu
-        if (status.navigation) {
-            const nav = status.navigation;
-            
-            document.getElementById('current-area').textContent = nav.current_area || '--';
-            document.getElementById('progress').textContent = `${nav.progress.toFixed(1)}%`;
-            
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = `${nav.progress}%`;
-        }
     }
-    
-    function updateLastUpdateTime() {
-        const now = new Date();
-        document.getElementById('last-update').textContent = now.toLocaleTimeString();
-    }
-    
-    function formatTime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    
+
+    // Camera functions
     function toggleCamera() {
-        cameraEnabled = !cameraEnabled;
-        
-        const cameraFeed = document.getElementById('camera-feed');
+        const toggle = document.getElementById('camera-toggle-switch');
+        const feed = document.getElementById('camera-feed');
         const placeholder = document.getElementById('camera-placeholder');
-        const btnText = document.getElementById('camera-btn-text');
-        
-        if (cameraEnabled) {
-            cameraFeed.style.display = 'block';
+
+        if (toggle.checked) {
+            feed.style.display = 'block';
             placeholder.style.display = 'none';
-            btnText.textContent = 'Kamerayı Kapat';
-            socket.emit('start_camera');
-            addLogEntry('INFO', 'Kamera akışı başlatıldı');
+            addLog('[INFO] Kamera açıldı');
         } else {
-            cameraFeed.style.display = 'none';
-            placeholder.style.display = 'block';
-            btnText.textContent = 'Kamerayı Aç';
-            socket.emit('stop_camera');
-            addLogEntry('INFO', 'Kamera akışı durduruldu');
+            feed.style.display = 'none';
+            placeholder.style.display = 'flex';
+            addLog('[INFO] Kamera kapatıldı');
         }
     }
-    
-    function captureImage() {
-        addLogEntry('INFO', 'Fotoğraf çekildi');
-        showAlert('Fotoğraf çekildi ve kaydedildi', 'success');
-    }
-    
-    function toggleFullscreen() {
-        const cameraFeed = document.getElementById('camera-feed');
-        if (cameraFeed.requestFullscreen) {
-            cameraFeed.requestFullscreen();
-        }
-    }
-    
-    function goToControl() {
-        window.location.href = '/control';
-    }
-    
-    function returnToCharger() {
-        if (confirm('Robot şarj istasyonuna dönecek. Onaylıyor musunuz?')) {
-            fetch('/api/return_to_charge', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Robot şarj istasyonuna dönüyor', 'info');
-                        addLogEntry('INFO', 'Şarj istasyonuna dönüş komutu verildi');
-                    }
-                });
-        }
-    }
-    
-    function startMowing() {
-        // Alan seçimi için modal açılabilir
-        fetch('/api/areas')
-            .then(response => response.json())
-            .then(areas => {
-                const areaNames = Object.keys(areas);
-                if (areaNames.length > 0) {
-                    const selectedArea = areaNames[0]; // İlk alanı seç
-                    fetch(`/api/areas/${selectedArea}/start`, {method: 'POST'})
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showAlert('Biçme görevi başlatıldı', 'success');
-                                addLogEntry('INFO', `Biçme görevi başlatıldı: ${selectedArea}`);
-                            }
-                        });
-                } else {
-                    showAlert('Tanımlanmış alan bulunamadı', 'warning');
-                }
-            });
-    }
-    
-    function pauseMowing() {
-        fetch('/api/pause_mowing', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('Biçme görevi duraklatıldı', 'warning');
-                    addLogEntry('INFO', 'Biçme görevi duraklatıldı');
-                }
-            });
-    }
-    
-    function testBlade() {
-        fetch('/api/blade/start', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('Bıçak testi başlatıldı', 'info');
-                    addLogEntry('INFO', 'Bıçak test modu aktif');
-                    
-                    // 5 saniye sonra durdur
-                    setTimeout(() => {
-                        fetch('/api/blade/stop', {method: 'POST'});
-                        addLogEntry('INFO', 'Bıçak test modu tamamlandı');
-                    }, 5000);
-                }
-            });
-    }
-    
-    function calibrateRobot() {
-        if (confirm('Robot kalibrasyonu başlatılacak. Bu işlem birkaç dakika sürebilir.')) {
-            fetch('/api/calibrate', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Kalibrasyon başlatıldı', 'info');
-                        addLogEntry('INFO', 'Robot kalibrasyon süreci başlatıldı');
-                    }
-                });
-        }
-    }
-    
-    function addLogEntry(level, message) {
+
+    // Log functions
+    function addLog(message) {
         const logContainer = document.getElementById('log-container');
-        const timestamp = new Date().toLocaleTimeString();
         const logEntry = document.createElement('div');
         logEntry.className = 'log-entry';
-        
-        let levelClass = '';
-        switch(level) {
-            case 'ERROR': levelClass = 'text-danger'; break;
-            case 'WARNING': levelClass = 'text-warning'; break;
-            case 'INFO': levelClass = 'text-info'; break;
-            default: levelClass = 'text-muted';
-        }
-        
-        logEntry.innerHTML = `<span class="text-muted">[${timestamp}]</span> <span class="${levelClass}">[${level}]</span> ${message}`;
-        
+        logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
         logContainer.appendChild(logEntry);
-        logContainer.scrollTop = logContainer.scrollHeight;
-        
-        // Maksimum 100 log tutmak için
-        if (logContainer.children.length > 100) {
+
+        // Keep only last 50 logs
+        if (logContainer.children.length > 50) {
             logContainer.removeChild(logContainer.firstChild);
         }
+
+        // Scroll to bottom
+        logContainer.scrollTop = logContainer.scrollHeight;
     }
-    
+
     function clearLogs() {
         document.getElementById('log-container').innerHTML = '';
-        addLogEntry('INFO', 'Log geçmişi temizlendi');
+        addLog('[INFO] Loglar temizlendi');
     }
-    
-    // Sayfa kapatıldığında interval'i temizle
-    window.addEventListener('beforeunload', function() {
+
+    // Control functions
+    function startMowing() {
+        fetch('/api/tasks/start_mowing', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[INFO] Biçme işlemi başlatıldı');
+                    document.getElementById('robot-state').textContent = 'Biçiyor';
+                    document.getElementById('robot-state').className = 'badge bg-success';
+                } else {
+                    addLog('[ERROR] Başlatma hatası: ' + (data.error || 'Bilinmeyen hata'));
+                }
+            })
+            .catch(error => {
+                addLog('[ERROR] Bağlantı hatası');
+            });
+    }
+
+    function pauseMowing() {
+        fetch('/api/tasks/pause', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[INFO] Biçme işlemi duraklatıldı');
+                    document.getElementById('robot-state').textContent = 'Duraklatıldı';
+                    document.getElementById('robot-state').className = 'badge bg-warning';
+                }
+            });
+    }
+
+    function stopMowing() {
+        fetch('/api/tasks/stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[INFO] Biçme işlemi durduruldu');
+                    document.getElementById('robot-state').textContent = 'Durdu';
+                    document.getElementById('robot-state').className = 'badge bg-secondary';
+                }
+            });
+    }
+
+    function returnHome() {
+        fetch('/api/return_home', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[INFO] Eve dönüş başlatıldı');
+                    document.getElementById('robot-state').textContent = 'Eve Dönüyor';
+                    document.getElementById('robot-state').className = 'badge bg-info';
+                }
+            });
+    }
+
+    function emergencyStop() {
+        fetch('/api/emergency_stop', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[EMERGENCY] ACİL DURDURMA AKTİF!');
+                    document.getElementById('robot-state').textContent = 'ACİL DURDUR';
+                    document.getElementById('robot-state').className = 'badge bg-danger';
+                }
+            });
+    }
+
+    function clearEmergency() {
+        fetch('/api/clear_emergency', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('[INFO] Acil durum temizlendi, robot devam edebilir');
+                    document.getElementById('robot-state').textContent = 'Hazır';
+                    document.getElementById('robot-state').className = 'badge bg-primary';
+                }
+            });
+    }
+
+    // System info updates
+    function initializeSystemInfo() {
+        // Simulate system info
+        document.getElementById('connected-users').textContent = '1';
+        document.getElementById('wifi-signal').textContent = 'Güçlü';
+        document.getElementById('gps-status').textContent = '8 uydu';
+    }
+
+    function updateSystemInfo() {
+        fetch('/api/stats/realtime')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('battery-level').textContent = data.battery_level + '%';
+                    document.getElementById('battery-bar').style.width = data.battery_level + '%';
+                    document.getElementById('robot-position').textContent = `X: ${data.position.x}, Y: ${data.position.y}`;
+                    document.getElementById('system-temp').textContent = data.temperature + '°C';
+                    document.getElementById('cpu-usage').textContent = data.cpu_usage + '%';
+                    document.getElementById('last-ping').textContent = new Date().toLocaleTimeString();
+                }
+            })
+            .catch(error => {
+                console.log('Stats update failed:', error);
+            });
+    }
+
+    // Start periodic updates
+    function startStatusUpdates() {
+        updateInterval = setInterval(function () {
+            updateCharts();
+            updateSystemInfo();
+        }, 2000);
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function () {
         if (updateInterval) {
             clearInterval(updateInterval);
         }

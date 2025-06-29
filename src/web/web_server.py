@@ -14,6 +14,13 @@ from flask_socketio import SocketIO, emit
 import base64
 import io
 
+try:
+    import cv2
+
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+
 
 class WebServer:
     """Web server sınıfı - Flask tabanlı"""
@@ -137,6 +144,21 @@ class WebServer:
                 return jsonify({"success": success})
             return jsonify({"error": "Main controller not available"}), 503
 
+        @self.app.route("/api/monitoring")
+        def api_monitoring():
+            """İzleme paneli için detaylı sistem bilgisi"""
+            self.total_requests += 1
+
+            monitoring_data = {
+                "timestamp": time.time(),
+                "system": self._get_system_metrics(),
+                "sensors": self._get_sensor_data(),
+                "motors": self._get_detailed_motor_status(),
+                "power": self._get_detailed_power_status(),
+                "performance": self._get_performance_data(),
+            }
+            return jsonify(monitoring_data)
+
         @self.app.route("/api/emergency_stop", methods=["POST"])
         def api_emergency_stop():
             """Acil durdurma"""
@@ -202,6 +224,172 @@ class WebServer:
                 self.motor_controller.set_blade_height(height_level)
                 return jsonify({"success": True})
             return jsonify({"error": "Motor controller not available"}), 503
+
+        @self.app.route("/api/return_home", methods=["POST"])
+        def api_return_home():
+            """Robot eve dönüş komutu"""
+            try:
+                if self.path_planner:
+                    # Eve dönüş koordinatları (0,0 şarj istasyonu)
+                    success = self.path_planner.plan_path_to_point(0.0, 0.0)
+                    if success:
+                        self.logger.info("Return home command sent")
+                        return jsonify(
+                            {"success": True, "message": "Eve dönüş başlatıldı"}
+                        )
+                    else:
+                        return jsonify(
+                            {"success": False, "error": "Rota planlama hatası"}
+                        )
+                else:
+                    self.logger.warning("Path planner not available")
+                    return jsonify(
+                        {"success": False, "error": "Path planner bulunamadı"}
+                    )
+            except Exception as e:
+                return jsonify({"success": False, "error": str(e)})
+
+        @self.app.route("/api/navigation/goto", methods=["POST"])
+        def api_goto():
+            """Belirli koordinata git komutu"""
+            try:
+                data = request.get_json()
+                target_x = data.get("target_x", 0.0)
+                target_y = data.get("target_y", 0.0)
+
+                if self.path_planner:
+                    success = self.path_planner.plan_path_to_point(target_x, target_y)
+                    if success:
+                        self.logger.info(
+                            f"Go-to command sent: ({target_x}, {target_y})"
+                        )
+                        return jsonify(
+                            {
+                                "success": True,
+                                "message": f"Hedefe gidiş başlatıldı: ({target_x:.2f}, {target_y:.2f})",
+                            }
+                        )
+                    else:
+                        return jsonify(
+                            {"success": False, "error": "Hedefe rota bulunamadı"}
+                        )
+                else:
+                    return jsonify(
+                        {"success": False, "error": "Path planner bulunamadı"}
+                    )
+            except Exception as e:
+                return jsonify({"success": False, "error": str(e)})
+
+        @self.app.route("/api/stats/realtime")
+        def api_stats_realtime():
+            """Gerçek zamanlı istatistikler"""
+            try:
+                # Güncel robot durumu
+                robot_status = self._get_robot_status()
+
+                # Performance metrikleri
+                stats = {
+                    "timestamp": time.time(),
+                    "battery_level": robot_status.get("power", {}).get(
+                        "battery_level", 0
+                    ),
+                    "current_speed": robot_status.get("navigation", {}).get(
+                        "current_speed", 0
+                    ),
+                    "coverage_percentage": robot_status.get("task", {}).get(
+                        "progress", 0
+                    ),
+                    "uptime": robot_status.get("system", {}).get("uptime", 0),
+                    "cpu_usage": robot_status.get("system", {}).get("cpu_percent", 0),
+                    "memory_usage": robot_status.get("system", {}).get(
+                        "memory_percent", 0
+                    ),
+                    "wifi_signal": robot_status.get("network", {}).get(
+                        "signal_strength", 0
+                    ),
+                    "motors": {
+                        "left_speed": robot_status.get("motors", {})
+                        .get("left", {})
+                        .get("speed", 0),
+                        "right_speed": robot_status.get("motors", {})
+                        .get("right", {})
+                        .get("speed", 0),
+                        "left_temp": robot_status.get("motors", {})
+                        .get("left", {})
+                        .get("temperature", 0),
+                        "right_temp": robot_status.get("motors", {})
+                        .get("right", {})
+                        .get("temperature", 0),
+                    },
+                }
+
+                return jsonify(stats)
+            except Exception as e:
+                return jsonify({"error": str(e)})
+
+        @self.app.route("/api/tasks/start_mowing", methods=["POST"])
+        def api_start_mowing_task():
+            """Biçme görevini başlat"""
+            try:
+                data = request.get_json()
+                area_id = data.get("area_id")
+                area_coordinates = data.get("area_coordinates", [])
+
+                if not area_id:
+                    return jsonify({"success": False, "error": "Alan ID gerekli"})
+
+                # Biçme görevini başlat
+                if self.main_controller:
+                    # Alan koordinatlarını path planner'a gönder
+                    if self.path_planner and area_coordinates:
+                        success = self.path_planner.set_work_area(area_coordinates)
+                        if success:
+                            # Biçme modunu aktif et
+                            self.main_controller.start_mowing_task(area_id)
+                            self.logger.info(f"Mowing task started for area: {area_id}")
+                            return jsonify(
+                                {
+                                    "success": True,
+                                    "message": f"Alan {area_id} biçme görevi başlatıldı",
+                                }
+                            )
+                        else:
+                            return jsonify(
+                                {
+                                    "success": False,
+                                    "error": "Alan koordinatları geçersiz",
+                                }
+                            )
+                    else:
+                        return jsonify(
+                            {"success": False, "error": "Path planner bulunamadı"}
+                        )
+                else:
+                    return jsonify(
+                        {"success": False, "error": "Main controller bulunamadı"}
+                    )
+            except Exception as e:
+                return jsonify({"success": False, "error": str(e)})
+
+        @self.app.route("/api/logs")
+        def api_logs():
+            """Sistem loglarını getir"""
+            try:
+                # Son 100 log girişini getir
+                log_entries = []
+                log_file = "logs/oba_robot.log"
+
+                if os.path.exists(log_file):
+                    with open(log_file, "r") as f:
+                        lines = f.readlines()
+                        # Son 100 satır
+                        for line in lines[-100:]:
+                            if line.strip():
+                                log_entries.append(line.strip())
+
+                return jsonify({"logs": log_entries})
+            except Exception as e:
+                return jsonify({"error": str(e), "logs": []})
 
         @self.app.route("/video_feed")
         def video_feed():
@@ -333,6 +521,146 @@ class WebServer:
             "camera_enabled": self.camera_enabled,
         }
 
+    def _get_system_metrics(self) -> Dict[str, Any]:
+        """Sistem metriklerini al"""
+        try:
+            import psutil
+
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage("/")
+
+            return {
+                "health": 95 if cpu_percent < 80 and memory.percent < 80 else 75,
+                "cpu_usage": round(cpu_percent, 1),
+                "memory_usage": round(memory.percent, 1),
+                "disk_usage": round(disk.percent, 1),
+                "network_status": "Güçlü",  # Simulated
+            }
+        except ImportError:
+            # psutil yoksa simulated data
+            return {
+                "health": 95,
+                "cpu_usage": 12.5,
+                "memory_usage": 45.2,
+                "disk_usage": 67.8,
+                "network_status": "Güçlü",
+            }
+
+    def _get_sensor_data(self) -> Dict[str, Any]:
+        """Sensör verilerini al"""
+        # Gerçek implementasyonda hardware'den alınacak
+        import random
+
+        return {
+            "temperature": round(20 + random.uniform(-5, 15), 1),
+            "humidity": round(50 + random.uniform(-20, 30), 1),
+            "distance": round(30 + random.uniform(-20, 50), 1),
+            "heading": round(random.uniform(0, 360), 1),
+            "inclination": round(random.uniform(-10, 10), 1),
+            "gps_satellites": random.randint(6, 12),
+        }
+
+    def _get_detailed_motor_status(self) -> Dict[str, Any]:
+        """Detaylı motor durumları"""
+        if not self.motor_controller:
+            return {}
+
+        try:
+            base_status = self.motor_controller.get_all_motor_status()
+
+            # Ek detaylar ekle
+            import random
+
+            return {
+                "left": {
+                    "speed": base_status.get("left_motor", {}).get("speed", 0),
+                    "current": round(random.uniform(0.5, 3.0), 2),
+                    "temperature": round(random.uniform(25, 45), 1),
+                    "load": round(random.uniform(10, 80), 1),
+                    "status": (
+                        "running"
+                        if base_status.get("left_motor", {}).get("enabled", False)
+                        else "stopped"
+                    ),
+                },
+                "right": {
+                    "speed": base_status.get("right_motor", {}).get("speed", 0),
+                    "current": round(random.uniform(0.5, 3.0), 2),
+                    "temperature": round(random.uniform(25, 45), 1),
+                    "load": round(random.uniform(10, 80), 1),
+                    "status": (
+                        "running"
+                        if base_status.get("right_motor", {}).get("enabled", False)
+                        else "stopped"
+                    ),
+                },
+                "blade": {
+                    "speed": base_status.get("blade_motor", {}).get("speed", 0),
+                    "current": round(random.uniform(1.0, 5.0), 2),
+                    "enabled": base_status.get("blade_motor", {}).get("enabled", False),
+                },
+            }
+        except Exception as e:
+            self.logger.error(f"Motor status error: {e}")
+            return {}
+
+    def _get_detailed_power_status(self) -> Dict[str, Any]:
+        """Detaylı güç durumu"""
+        if not self.power_manager:
+            return {}
+
+        try:
+            base_power = self.power_manager.get_power_status()
+
+            # Ek detaylar
+            import random
+
+            return {
+                "main_battery": {
+                    "level": base_power.get("battery_level", 85),
+                    "voltage": base_power.get("voltage", 12.6),
+                    "current": base_power.get("current", 2.3),
+                    "temperature": round(random.uniform(20, 35), 1),
+                },
+                "backup_battery": {
+                    "level": round(random.uniform(80, 100), 1),
+                    "voltage": round(random.uniform(12.0, 13.0), 1),
+                    "current": round(random.uniform(0.1, 0.5), 2),
+                    "status": "ready",
+                },
+                "charging": base_power.get("charging", False),
+                "charging_power": base_power.get("charging_power", 0),
+                "total_power": round(random.uniform(25, 35), 1),
+                "efficiency": round(random.uniform(85, 95), 1),
+            }
+        except Exception as e:
+            self.logger.error(f"Power status error: {e}")
+            return {}
+
+    def _get_performance_data(self) -> Dict[str, Any]:
+        """Performans grafiği için veri"""
+        # Son 20 dakikalık simulated data
+        import random
+        from datetime import datetime, timedelta
+
+        now = datetime.now()
+        timestamps = []
+        cpu_data = []
+        memory_data = []
+
+        for i in range(20):
+            time_point = now - timedelta(minutes=19 - i)
+            timestamps.append(time_point.strftime("%H:%M"))
+            cpu_data.append(round(random.uniform(5, 25), 1))
+            memory_data.append(round(random.uniform(40, 60), 1))
+
+        return {
+            "timestamps": timestamps,
+            "cpu": cpu_data,
+            "memory": memory_data,
+        }
+
     def _generate_video_stream(self):
         """Kamera video stream üreteci"""
         while self.camera_enabled:
@@ -363,8 +691,10 @@ class WebServer:
         # import picamera
 
         # Simülasyon için boş frame
+        if not CV2_AVAILABLE:
+            return None
+
         try:
-            import cv2
             import numpy as np
 
             # Test pattern oluştur
@@ -397,8 +727,8 @@ class WebServer:
 
             return frame
 
-        except ImportError:
-            # OpenCV yoksa None döndür
+        except Exception as e:
+            self.logger.error(f"Camera frame error: {e}")
             return None
 
     def start_real_time_updates(self):
@@ -468,14 +798,14 @@ def create_html_templates():
         .status-online { background-color: #28a745; }
         .status-offline { background-color: #dc3545; }
         .status-warning { background-color: #ffc107; }
-        
+
         .battery-bar {
             height: 20px;
             background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
             border-radius: 10px;
             position: relative;
         }
-        
+
         .control-pad {
             width: 200px;
             height: 200px;
@@ -485,7 +815,7 @@ def create_html_templates():
             margin: 20px auto;
             cursor: pointer;
         }
-        
+
         .control-center {
             width: 50px;
             height: 50px;
@@ -526,22 +856,22 @@ def create_html_templates():
     <script>
         // Socket.IO bağlantısı
         const socket = io();
-        
+
         socket.on('connect', function() {
             document.getElementById('connection-status').className = 'status-indicator status-online';
             document.getElementById('connection-text').textContent = 'Bağlı';
         });
-        
+
         socket.on('disconnect', function() {
             document.getElementById('connection-status').className = 'status-indicator status-offline';
             document.getElementById('connection-text').textContent = 'Bağlantı Kesildi';
         });
-        
+
         // Durum güncellemeleri
         socket.on('robot_status_update', function(data) {
             updateRobotStatus(data);
         });
-        
+
         function updateRobotStatus(status) {
             // Battery level güncelle
             if (status.power && status.power.battery_level !== undefined) {
@@ -550,7 +880,7 @@ def create_html_templates():
                     batteryElement.textContent = status.power.battery_level.toFixed(1) + '%';
                 }
             }
-            
+
             // Robot state güncelle
             if (status.main_controller && status.main_controller.state) {
                 const stateElement = document.getElementById('robot-state');
@@ -559,7 +889,7 @@ def create_html_templates():
                 }
             }
         }
-        
+
         // Emergency stop
         function emergencyStop() {
             fetch('/api/emergency_stop', {method: 'POST'})
@@ -570,7 +900,7 @@ def create_html_templates():
                     }
                 });
         }
-        
+
         // Clear emergency
         function clearEmergency() {
             fetch('/api/clear_emergency', {method: 'POST'})
@@ -654,7 +984,7 @@ def create_html_templates():
         // Kamera toggle functionality
         socket.emit('start_camera');
     }
-    
+
     // Periyodik durum güncellemesi
     setInterval(function() {
         fetch('/api/status')
