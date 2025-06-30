@@ -145,6 +145,28 @@ class WebServer:
                 return jsonify({"success": success})
             return jsonify({"error": "Main controller not available"}), 503
 
+        @self.app.route("/api/tasks/start_mowing", methods=["POST"])
+        def api_tasks_start_mowing():
+            """Web arayüzü için biçme görevini başlat (alan ID'siz)"""
+            if self.main_controller:
+                # Varsayılan veya ilk alanı kullan
+                area_id = None
+                if self.path_planner and self.path_planner.areas:
+                    area_id = next(iter(self.path_planner.areas.keys()))
+                if not area_id:
+                    return (
+                        jsonify(
+                            {"success": False, "error": "Hiçbir alan tanımlı değil"}
+                        ),
+                        400,
+                    )
+                success = self.main_controller.start_mowing_task(area_id)
+                return jsonify({"success": success})
+            return (
+                jsonify({"success": False, "error": "Main controller not available"}),
+                503,
+            )
+
         @self.app.route("/api/areas", methods=["POST"])
         def api_create_area():
             """Yeni alan oluştur"""
@@ -287,7 +309,7 @@ class WebServer:
                 return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/areas/<area_id>/stop", methods=["POST"])
-        def api_stop_mowing(area_id):
+        def api_stop_mowing_area(area_id):
             """Biçme görevini durdur"""
             try:
                 if self.main_controller:
@@ -314,225 +336,65 @@ class WebServer:
                 self.logger.error(f"Biçme durdurma hatası: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
-        @self.app.route("/api/monitoring")
-        def api_monitoring():
-            """İzleme paneli için detaylı sistem bilgisi"""
-            self.total_requests += 1
-
-            monitoring_data = {
-                "timestamp": time.time(),
-                "system": self._get_system_metrics(),
-                "sensors": self._get_sensor_data(),
-                "motors": self._get_detailed_motor_status(),
-                "power": self._get_detailed_power_status(),
-                "performance": self._get_performance_data(),
-            }
-            return jsonify(monitoring_data)
-
-        @self.app.route("/api/emergency_stop", methods=["POST"])
-        def api_emergency_stop():
-            """Acil durdurma"""
-            if self.main_controller:
-                self.main_controller.emergency_stop_triggered()
-                return jsonify({"success": True})
-            return jsonify({"error": "Main controller not available"}), 503
-
-        @self.app.route("/api/clear_emergency", methods=["POST"])
-        def api_clear_emergency():
-            """Acil durdurma kaldır"""
-            if self.main_controller:
-                self.main_controller.clear_emergency_stop()
-                return jsonify({"success": True})
-            return jsonify({"error": "Main controller not available"}), 503
-
-        @self.app.route("/api/manual_control", methods=["POST"])
-        def api_manual_control():
-            """Manuel kontrol komutları"""
-            data = request.get_json()
-
-            if not data:
-                return jsonify({"error": "No data provided"}), 400
-
-            # Manuel kontrol modunu aktifleştir
-            if not self.manual_control_active:
-                self._activate_manual_control()
-
-            # Hareket komutları
-            linear = data.get("linear", 0.0)
-            angular = data.get("angular", 0.0)
-
-            if self.motor_controller:
-                self.motor_controller.move(linear, angular)
-                self.last_manual_command_time = time.time()
-                return jsonify({"success": True})
-
-            return jsonify({"error": "Motor controller not available"}), 503
-
-        @self.app.route("/api/blade/start", methods=["POST"])
-        def api_start_blade():
-            """Biçme bıçağını başlat"""
-            if self.motor_controller:
-                self.motor_controller.start_blade()
-                return jsonify({"success": True})
-            return jsonify({"error": "Motor controller not available"}), 503
-
-        @self.app.route("/api/blade/stop", methods=["POST"])
-        def api_stop_blade():
-            """Biçme bıçağını durdur"""
-            if self.motor_controller:
-                self.motor_controller.stop_blade()
-                return jsonify({"success": True})
-            return jsonify({"error": "Motor controller not available"}), 503
-
-        @self.app.route("/api/blade/height", methods=["POST"])
-        def api_set_blade_height():
-            """Biçme yüksekliğini ayarla"""
-            data = request.get_json()
-            height_level = data.get("height_level", 2)
-
-            if self.motor_controller:
-                self.motor_controller.set_blade_height(height_level)
-                return jsonify({"success": True})
-            return jsonify({"error": "Motor controller not available"}), 503
-
-        @self.app.route("/api/return_home", methods=["POST"])
-        def api_return_home():
-            """Robot eve dönüş komutu"""
+        @self.app.route("/api/tasks/pause", methods=["POST"])
+        def api_pause_mowing():
+            """Biçme görevini duraklat"""
             try:
-                if self.path_planner:
-                    # Eve dönüş koordinatları (0,0 şarj istasyonu)
-                    success = self.path_planner.plan_path_to_point(0.0, 0.0)
-                    if success:
-                        self.logger.info("Return home command sent")
-                        return jsonify(
-                            {"success": True, "message": "Eve dönüş başlatıldı"}
-                        )
-                    else:
-                        return jsonify(
-                            {"success": False, "error": "Rota planlama hatası"}
-                        )
-                else:
-                    self.logger.warning("Path planner not available")
-                    return jsonify(
-                        {"success": False, "error": "Path planner bulunamadı"}
-                    )
-            except Exception as e:
-                return jsonify({"success": False, "error": str(e)})
-
-        @self.app.route("/api/navigation/goto", methods=["POST"])
-        def api_goto():
-            """Belirli koordinata git komutu"""
-            try:
-                data = request.get_json()
-                target_x = data.get("target_x", 0.0)
-                target_y = data.get("target_y", 0.0)
-
-                if self.path_planner:
-                    success = self.path_planner.plan_path_to_point(target_x, target_y)
-                    if success:
-                        self.logger.info(
-                            f"Go-to command sent: ({target_x}, {target_y})"
-                        )
-                        return jsonify(
-                            {
-                                "success": True,
-                                "message": f"Hedefe gidiş başlatıldı: ({target_x:.2f}, {target_y:.2f})",
-                            }
-                        )
-                    else:
-                        return jsonify(
-                            {"success": False, "error": "Hedefe rota bulunamadı"}
-                        )
-                else:
-                    return jsonify(
-                        {"success": False, "error": "Path planner bulunamadı"}
-                    )
-            except Exception as e:
-                return jsonify({"success": False, "error": str(e)})
-
-        @self.app.route("/api/stats/realtime")
-        def api_stats_realtime():
-            """Gerçek zamanlı istatistikler"""
-            try:
-                # Güncel robot durumu
-                robot_status = self._get_robot_status()
-
-                # Performance metrikleri
-                stats = {
-                    "timestamp": time.time(),
-                    "battery_level": robot_status.get("power", {}).get(
-                        "battery_level", 0
-                    ),
-                    "current_speed": robot_status.get("navigation", {}).get(
-                        "current_speed", 0
-                    ),
-                    "coverage_percentage": robot_status.get("task", {}).get(
-                        "progress", 0
-                    ),
-                    "uptime": robot_status.get("system", {}).get("uptime", 0),
-                    "cpu_usage": robot_status.get("system", {}).get("cpu_percent", 0),
-                    "memory_usage": robot_status.get("system", {}).get(
-                        "memory_percent", 0
-                    ),
-                    "wifi_signal": robot_status.get("network", {}).get(
-                        "signal_strength", 0
-                    ),
-                    "motors": {
-                        "left_speed": robot_status.get("motors", {})
-                        .get("left", {})
-                        .get("speed", 0),
-                        "right_speed": robot_status.get("motors", {})
-                        .get("right", {})
-                        .get("speed", 0),
-                    },
-                }
-
-                return jsonify(stats)
-            except Exception as e:
-                return jsonify({"error": str(e)})
-
-        @self.app.route("/api/tasks/start_mowing", methods=["POST"])
-        def api_start_mowing_task():
-            """Biçme görevini başlat"""
-            try:
-                data = request.get_json()
-                area_id = data.get("area_id")
-                area_coordinates = data.get("area_coordinates", [])
-
-                if not area_id:
-                    return jsonify({"success": False, "error": "Alan ID gerekli"})
-
-                # Biçme görevini başlat
                 if self.main_controller:
-                    # Alan koordinatlarını path planner'a gönder
-                    if self.path_planner and area_coordinates:
-                        success = self.path_planner.set_work_area(area_coordinates)
-                        if success:
-                            # Biçme modunu aktif et
-                            self.main_controller.start_mowing_task(area_id)
-                            self.logger.info(f"Mowing task started for area: {area_id}")
+                    # Robotu PAUSED durumuna geçir
+                    from src.core.main_controller import RobotState
+
+                    # Mevcut durumu kontrol et
+                    if hasattr(self.main_controller, "state"):
+                        if self.main_controller.state == RobotState.MOWING:
+                            self.main_controller.state = RobotState.PAUSED
+
+                            # Motorları geçici olarak durdur
+                            if self.motor_controller:
+                                self.motor_controller.stop_movement()
+
+                            self.logger.info("Biçme görevi duraklatıldı")
                             return jsonify(
-                                {
-                                    "success": True,
-                                    "message": f"Alan {area_id} biçme görevi başlatıldı",
-                                }
+                                {"success": True, "message": "Biçme duraklatıldı"}
                             )
                         else:
                             return jsonify(
-                                {
-                                    "success": False,
-                                    "error": "Alan koordinatları geçersiz",
-                                }
+                                {"success": False, "error": "Robot biçme yapmıyor"}
                             )
                     else:
                         return jsonify(
-                            {"success": False, "error": "Path planner bulunamadı"}
+                            {"success": False, "error": "Robot durumu bulunamadı"}
                         )
                 else:
                     return jsonify(
                         {"success": False, "error": "Main controller bulunamadı"}
                     )
             except Exception as e:
+                self.logger.error(f"Biçme duraklama hatası: {e}")
+                return jsonify({"success": False, "error": str(e)})
+
+        @self.app.route("/api/tasks/stop", methods=["POST"])
+        def api_stop_mowing_task():
+            """Biçme görevini durdur"""
+            try:
+                if self.main_controller:
+                    # Robotu IDLE durumuna geçir
+                    from src.core.main_controller import RobotState
+
+                    self.main_controller.state = RobotState.IDLE
+
+                    # Tüm motorları durdur
+                    if self.motor_controller:
+                        self.motor_controller.stop_all()
+
+                    self.logger.info("Biçme görevi durduruldu")
+                    return jsonify({"success": True, "message": "Biçme durduruldu"})
+                else:
+                    return jsonify(
+                        {"success": False, "error": "Main controller bulunamadı"}
+                    )
+            except Exception as e:
+                self.logger.error(f"Biçme durdurma hatası: {e}")
                 return jsonify({"success": False, "error": str(e)})
 
         @self.app.route("/api/logs")
@@ -581,6 +443,60 @@ class WebServer:
                 )
             else:
                 return "Camera not enabled", 503
+
+        @self.app.route("/api/stats/realtime")
+        def api_stats_realtime():
+            """Anlık robot ve sistem durumu (eski frontend uyumluluğu için)"""
+            return api_status()
+
+        @self.app.route("/api/emergency_stop", methods=["POST"])
+        def api_emergency_stop():
+            """Acil durdurma komutu"""
+            if self.main_controller:
+                try:
+                    self.main_controller.emergency_stop()
+                    return jsonify({"success": True})
+                except Exception as e:
+                    self.logger.error(f"Acil durdurma hatası: {e}")
+                    return jsonify({"success": False, "error": str(e)}), 500
+            return (
+                jsonify({"success": False, "error": "Main controller not available"}),
+                503,
+            )
+
+        @self.app.route("/api/clear_emergency", methods=["POST"])
+        def api_clear_emergency():
+            """Acil durdurmayı kaldır"""
+            if self.main_controller:
+                try:
+                    self.main_controller.clear_emergency_stop()
+                    return jsonify({"success": True})
+                except Exception as e:
+                    self.logger.error(f"Acil durdurma kaldırma hatası: {e}")
+                    return jsonify({"success": False, "error": str(e)}), 500
+            return (
+                jsonify({"success": False, "error": "Main controller not available"}),
+                503,
+            )
+
+        @self.app.route("/api/return_home", methods=["POST"])
+        def api_return_home():
+            """Robotu şarj istasyonuna döndür"""
+            if self.main_controller and hasattr(
+                self.main_controller, "return_to_home_task"
+            ):
+                try:
+                    success = self.main_controller.return_to_home_task()
+                    return jsonify({"success": success})
+                except Exception as e:
+                    self.logger.error(f"Şarja dönme hatası: {e}")
+                    return jsonify({"success": False, "error": str(e)}), 500
+            return (
+                jsonify(
+                    {"success": False, "error": "Main controller veya fonksiyon yok"}
+                ),
+                503,
+            )
 
     def _setup_socket_events(self):
         """SocketIO olaylarını ayarla"""

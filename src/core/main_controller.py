@@ -16,6 +16,7 @@ class RobotState(Enum):
 
     IDLE = "idle"
     MOWING = "mowing"
+    PAUSED = "paused"
     RETURNING_TO_CHARGE = "returning_to_charge"
     CHARGING = "charging"
     MANUAL_CONTROL = "manual_control"
@@ -30,7 +31,7 @@ class MainController:
         self.state = RobotState.IDLE
         self.previous_state = RobotState.IDLE
         self.running = False
-        self.emergency_stop = False
+        self.emergency_stop_active = False
 
         # Simülasyon kontrolü
         self.simulate = simulate
@@ -162,9 +163,11 @@ class MainController:
         self._stop_navigation_loop()
         self.logger.info("Robot durduruluyor...")
 
-    def emergency_stop_triggered(self):
-        """Acil durdurma"""
-        self.emergency_stop = True
+    def emergency_stop(self):
+        """Acil durdurma (motor controller'a iletir)"""
+        if self.motor_controller:
+            self.motor_controller.emergency_stop()
+        self.emergency_stop_active = True
         self.previous_state = self.state
         self.state = RobotState.EMERGENCY_STOP
         self.logger.critical("ACİL DURDURMA AKTİF!")
@@ -175,8 +178,8 @@ class MainController:
 
     def clear_emergency_stop(self):
         """Acil durdurma kaldır"""
-        if self.emergency_stop:
-            self.emergency_stop = False
+        if self.emergency_stop_active:
+            self.emergency_stop_active = False
             self.state = RobotState.IDLE
             self.logger.info("Acil durdurma kaldırıldı")
 
@@ -184,7 +187,7 @@ class MainController:
         """Ana kontrol döngüsü"""
         while self.running:
             try:
-                if not self.emergency_stop:
+                if not self.emergency_stop_active:
                     self._state_machine()
                 else:
                     self._handle_emergency_stop()
@@ -369,7 +372,7 @@ class MainController:
             "state": self.state.value,
             "battery_level": battery_level,
             "position": self.stats["current_position"],
-            "emergency_stop": self.emergency_stop,
+            "emergency_stop": self.emergency_stop_active,
             "uptime": self.stats["total_runtime"],
             "mowing_time": self.stats["mowing_time"],
             "charging_cycles": self.stats["charging_cycles"],
